@@ -1,6 +1,7 @@
 import 'package:advsw/screens/auth/signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:advsw/screens/auth/widgets.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -81,7 +82,9 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(
                 width: double.infinity,
                 height: 56,
-                child: ElevatedButton(onPressed: (){},
+                child: ElevatedButton(onPressed: (){
+                  context.go('/home');
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryTeal,
                   foregroundColor: Colors.white,
@@ -100,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [Text('dont have acc?'), SizedBox(width: 4), TextButton(onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (context) => const SignupScreen()));}, child: Text('sign up'))],)
+            children: [Text('dont have acc?'), SizedBox(width: 4), TextButton(onPressed: (){context.go('/signup');}, child: Text('sign up'))],)
 
         ],
     ),

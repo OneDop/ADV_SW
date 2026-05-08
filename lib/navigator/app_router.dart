@@ -1,12 +1,25 @@
 // lib/app_router.dart
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:advsw/screens/root/root.dart';
 import 'package:advsw/screens/home/home.dart';
+import 'package:advsw/screens/auth/login_screen.dart';
+import 'package:advsw/screens/auth/signup_screen.dart';
 //import 'features/profile/profile_screen.dart';
 
 final router = GoRouter(
-  initialLocation: '/home',
+  initialLocation: '/login',
   routes: [
+    // Login route
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const LoginScreen(),
+    ),
+    // Signup route
+    GoRoute(
+      path: '/signup',
+      builder: (context, state) => const SignupScreen(),
+    ),
     // StatefulShellRoute creates the persistent bottom bar
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
@@ -27,7 +40,10 @@ final router = GoRouter(
           routes: [
             GoRoute(
               path: '/profile',
-              //builder: (context, state) => const ProfileScreen(),
+              builder: (context, state) => Scaffold(
+                appBar: AppBar(title: const Text('Profile')),
+                body: const Center(child: Text('Profile Screen - Coming Soon')),
+              ),
             ),
           ],
         ),

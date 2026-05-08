@@ -5,7 +5,7 @@ import 'package:advsw/screens/root/root.dart';
 import 'package:advsw/screens/home/home.dart';
 import 'package:advsw/screens/auth/login_screen.dart';
 import 'package:advsw/screens/auth/signup_screen.dart';
-//import 'features/profile/profile_screen.dart';
+import 'package:advsw/screens/profile/profile.dart';
 
 final router = GoRouter(
   initialLocation: '/login',
@@ -40,10 +40,7 @@ final router = GoRouter(
           routes: [
             GoRoute(
               path: '/profile',
-              builder: (context, state) => Scaffold(
-                appBar: AppBar(title: const Text('Profile')),
-                body: const Center(child: Text('Profile Screen - Coming Soon')),
-              ),
+              builder: (context, state) => const ProfileScreen(),
             ),
           ],
         ),

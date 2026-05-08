@@ -1,0 +1,134 @@
+📋 Functional Requirements
+👤 1. User Account & Authentication
+
+FR1 – Sign Up
+The system shall allow users to create an account using their personal information.
+
+FR2 – Log In
+The system shall allow users to log in using their credentials.
+
+FR3 – Log Out
+The system shall allow users to log out of their account.
+
+FR4 – Password Reset
+The system shall allow users to reset their password.
+
+🧑‍💼 2. User Profile Management
+
+FR5 – Update First Name
+The system shall allow users to update their first name.
+
+FR6 – Update Last Name
+The system shall allow users to update their last name.
+
+FR7 – Update Bio
+The system shall allow users to update their profile bio.
+
+FR8 – Update Status
+The system shall allow users to update their availability status.
+
+FR9 – Update Skills
+The system shall allow users to update their skills.
+
+FR10 – Upload Profile Picture
+The system shall allow users to upload and update a profile picture.
+
+FR11 – Add Past Projects
+The system shall allow users to add past projects to their profile.
+
+FR12 – Specify Experience Level
+The system shall allow users to specify their experience level.
+
+FR13 – View Other Profiles
+The system shall allow users to view other users’ profiles.
+
+📁 3. Project Management
+
+FR14 – Create Project
+The system shall allow users to create new projects.
+
+FR15 – Edit Project Name
+The system shall allow users to edit the project name.
+
+FR16 – Edit Project Description
+The system shall allow users to edit the project description.
+
+FR17 – Delete Project
+The system shall allow users to delete projects they own.
+
+FR18 – View Projects
+The system shall allow users to view all their projects.
+
+FR19 – Invite Members
+The system shall allow users to invite others to join a project.
+
+FR20 – Remove Member
+The system shall allow project owners to remove members from a project.
+
+FR21 – Edit Member Role
+The system shall allow project owners to modify roles of project members.
+
+FR22 – Leave Project
+The system shall allow users to leave a project.
+
+FR23 – Respond to Invitations
+The system shall allow users to accept or reject project invitations.
+
+✅ 4. Task Management
+
+FR24 – Create Task
+The system shall allow users to create tasks within a project.
+
+FR25 – Assign Task
+The system shall allow users to assign tasks to team members.
+
+FR26 – Update Task Status
+The system shall allow users to update task status (To Do, In Progress, Done).
+
+FR27 – Set Deadline
+The system shall allow users to set deadlines for tasks.
+
+FR28 – Edit Task
+The system shall allow users to edit tasks.
+
+FR29 – Delete Task
+The system shall allow users to delete tasks.
+
+FR30 – View Tasks
+The system shall allow users to view all tasks within a project.
+
+🔍 5. Search & Discovery
+
+FR31 – Search Users by Name
+The system shall allow users to search for other users by name.
+
+FR32 – Search Users by Skills
+The system shall allow users to search for users based on skills.
+
+FR33 – Browse Projects
+The system shall allow users to browse available projects.
+
+FR34 – Request to Join Project
+The system shall allow users to request to join projects.
+
+💬 6. Communication
+
+FR35 – Send Message
+The system shall allow users to send messages in project chats.
+
+FR36 – Delete Message
+The system shall allow users to delete messages in project chats.
+
+🔔 7. Notifications
+
+FR37 – Message Notifications
+The system shall notify users of new messages.
+
+FR38 – Task Assignment Notifications
+The system shall notify users when tasks are assigned to them.
+
+FR39 – Deadline Notifications
+The system shall notify users of upcoming deadlines.
+
+FR40 – Project Request Notifications
+The system shall notify users of join requests and approvals.

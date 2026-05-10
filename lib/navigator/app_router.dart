@@ -1,4 +1,5 @@
 // lib/app_router.dart
+import 'package:advsw/screens/myprojects/projects_list.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:advsw/screens/root/root.dart';
@@ -35,7 +36,16 @@ final router = GoRouter(
             ),
           ],
         ),
-        // Tab 2: Profile
+        // Tab 2: Projects
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/projects-tab',
+              builder: (context, state) => const ProjectsListScreen(),
+            ),
+          ],
+        ),
+        // Tab 3: Profile
         StatefulShellBranch(
           routes: [
             GoRoute(

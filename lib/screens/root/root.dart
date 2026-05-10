@@ -15,12 +15,16 @@ class RootScreen extends StatelessWidget {
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: navigationShell.currentIndex,
         onTap: (index) {
-          // Map visual index to router branch index
+          // Visual Indices: 0: Home, 1: Search, 2: Projects, 3: Profile
+          // Router Branches: 0: Home, 1: Projects, 2: Profile
           if (index == 0) {
             navigationShell.goBranch(0);
-          } else if (index == 3) {
+          } else if (index == 2) {
             navigationShell.goBranch(1);
+          } else if (index == 3) {
+            navigationShell.goBranch(2);
           }
+          // Search (index 1) can be handled here if added later
         },
       ),
     );
@@ -39,8 +43,15 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Maps router index (0, 1) to visual index (0, 3)
-    int displayIndex = currentIndex == 0 ? 0 : 3;
+    // Maps router branch index (0, 1, 2) to visual index (0, 2, 3)
+    int displayIndex;
+    if (currentIndex == 0) {
+      displayIndex = 0;
+    } else if (currentIndex == 1) {
+      displayIndex = 2;
+    } else {
+      displayIndex = 3;
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -57,7 +68,7 @@ class CustomBottomNavBar extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
           child: Container(
-            padding: const EdgeInsets.only(top: 12, bottom: 15, left: 16, right: 16),
+            padding: const EdgeInsets.only(top: 12, bottom: 20, left: 16, right: 16),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.9),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -125,14 +136,14 @@ class _NavBarItem extends StatelessWidget {
           color: isSelected ? const Color(0xFF004253) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           boxShadow: isSelected
-            ? [
-                BoxShadow(
-                  color: const Color(0xFF004253).withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                )
-              ]
-            : null,
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF004253).withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : null,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,

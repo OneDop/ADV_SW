@@ -1,5 +1,6 @@
 import 'package:advsw/screens/home/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -75,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Good morning, Julian.',
                       style: TextStyle(
                         color: Colors.white,
@@ -84,8 +85,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontFamily: 'Manrope',
                       ),
                     ),
-                    SizedBox(height: 8),
-                    Text(
+                    const SizedBox(height: 8),
+                    const Text(
                       'Focus on the Aris Rebrand today.',
                       style: TextStyle(
                         color: Colors.white70,
@@ -100,7 +101,10 @@ class _HomeScreenState extends State<HomeScreen> {
               // My Projects Section
               SectionHeader(
                 title: 'My Projects',
-                onViewAll: () {},
+                onViewAll: () {
+                   // Navigate to projects branch (Branch 1 in StatefulShellRoute)
+                   StatefulNavigationShell.of(context).goBranch(1);
+                },
               ),
               SizedBox(
                 height: 180,
@@ -169,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Productivity Card
               const ProductivityCard(),
-              const SizedBox(height: 100), // Space for FAB
+              const SizedBox(height: 120), // Extra space for BottomNav
             ],
           ),
         ),

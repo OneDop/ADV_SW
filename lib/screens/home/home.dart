@@ -51,7 +51,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      // Navigate to Notifications branch
+                      StatefulNavigationShell.of(context).goBranch(3);
+                    },
                     icon: const Icon(Icons.notifications_none, color: Color(0xFF004253)),
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.white,
@@ -76,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Good morning, Julian.',
                       style: TextStyle(
                         color: Colors.white,
@@ -85,8 +88,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontFamily: 'Manrope',
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
+                    SizedBox(height: 8),
+                    Text(
                       'Focus on the Aris Rebrand today.',
                       style: TextStyle(
                         color: Colors.white70,

@@ -15,14 +15,16 @@ class RootScreen extends StatelessWidget {
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: navigationShell.currentIndex,
         onTap: (index) {
-          // Visual Indices: 0: Home, 1: Search, 2: Projects, 3: Profile
-          // Router Branches: 0: Home, 1: Projects, 2: Profile
+          // Visual Indices: 0: Home, 1: Search, 2: Projects, 3: Profile, 4: Updates
+          // Router Branches: 0: Home, 1: Projects, 2: Profile, 3: Notifications
           if (index == 0) {
             navigationShell.goBranch(0);
           } else if (index == 2) {
             navigationShell.goBranch(1);
           } else if (index == 3) {
             navigationShell.goBranch(2);
+          } else if (index == 4) {
+            navigationShell.goBranch(3);
           }
           // Search (index 1) can be handled here if added later
         },
@@ -43,14 +45,16 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Maps router branch index (0, 1, 2) to visual index (0, 2, 3)
+    // Maps router branch index (0, 1, 2, 3) to visual index (0, 2, 3, 4)
     int displayIndex;
     if (currentIndex == 0) {
       displayIndex = 0;
     } else if (currentIndex == 1) {
       displayIndex = 2;
-    } else {
+    } else if (currentIndex == 2) {
       displayIndex = 3;
+    } else {
+      displayIndex = 4;
     }
 
     return Container(
@@ -101,6 +105,12 @@ class CustomBottomNavBar extends StatelessWidget {
                   isSelected: displayIndex == 3,
                   onTap: () => onTap(3),
                 ),
+                _NavBarItem(
+                  icon: Icons.notifications_rounded,
+                  label: 'Updates',
+                  isSelected: displayIndex == 4,
+                  onTap: () => onTap(4),
+                ),
               ],
             ),
           ),
@@ -131,7 +141,7 @@ class _NavBarItem extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF004253) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),

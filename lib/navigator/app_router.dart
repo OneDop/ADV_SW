@@ -1,5 +1,7 @@
 // lib/app_router.dart
 import 'package:advsw/screens/myprojects/projects_list.dart';
+import 'package:advsw/screens/mynotifications/notifications_screen.dart';
+import 'package:advsw/screens/projectInfo/project_info.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:advsw/screens/root/root.dart';
@@ -20,6 +22,11 @@ final router = GoRouter(
     GoRoute(
       path: '/signup',
       builder: (context, state) => const SignupScreen(),
+    ),
+    // Project Info route (standalone or can be nested)
+    GoRoute(
+      path: '/project-info',
+      builder: (context, state) => const ProjectInfoScreen(),
     ),
     // StatefulShellRoute creates the persistent bottom bar
     StatefulShellRoute.indexedStack(
@@ -51,6 +58,15 @@ final router = GoRouter(
             GoRoute(
               path: '/profile',
               builder: (context, state) => const ProfileScreen(),
+            ),
+          ],
+        ),
+        // Tab 4: Notifications (Updates)
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/notifications',
+              builder: (context, state) => const NotificationsScreen(),
             ),
           ],
         ),

@@ -1,0 +1,70 @@
+import 'package:advsw/models/invitation_model.dart';
+import 'package:advsw/services/api_client.dart';
+
+class InvitationService {
+  final ApiClient _apiClient = ApiClient();
+
+  /// POST /api/invitations/invite?projectId={projectId}&receiverId={receiverId}
+  Future<InvitationResponse> sendInvite(int projectId, int receiverId) async {
+    try {
+      final response = await _apiClient.post(
+        '/invitations/invite',
+        queryParameters: {
+          'projectId': projectId,
+          'receiverId': receiverId,
+        },
+      );
+      return InvitationResponse.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// POST /api/invitations/join-request?projectId={projectId}
+  Future<InvitationResponse> sendJoinRequest(int projectId) async {
+    try {
+      final response = await _apiClient.post(
+        '/invitations/join-request',
+        queryParameters: {'projectId': projectId},
+      );
+      return InvitationResponse.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// PATCH /api/invitations/{id}/respond
+  Future<InvitationResponse> respondToInvitation(int id, RespondInvitationRequest request) async {
+    try {
+      final response = await _apiClient.patch(
+        '/invitations/$id/respond',
+        data: request.toJson(),
+      );
+      return InvitationResponse.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// GET /api/invitations/my
+  Future<List<InvitationResponse>> getPendingInvitationsForUser() async {
+    try {
+      final response = await _apiClient.get('/invitations/my');
+      final List<dynamic> data = response.data;
+      return data.map((json) => InvitationResponse.fromJson(json)).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// GET /api/invitations/join-requests/{projectId}
+  Future<List<InvitationResponse>> getPendingJoinRequestsForProject(int projectId) async {
+    try {
+      final response = await _apiClient.get('/invitations/join-requests/$projectId');
+      final List<dynamic> data = response.data;
+      return data.map((json) => InvitationResponse.fromJson(json)).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+}

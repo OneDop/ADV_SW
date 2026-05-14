@@ -10,7 +10,6 @@ class TaskService {
       final response = await _apiClient.post(
         '/tasks',
         data: request.toJson(),
-        // Spring controller uses @RequestParam for projectId
         queryParameters: {'projectId': projectId},
       );
       return TaskResponse.fromJson(response.data);
@@ -19,12 +18,13 @@ class TaskService {
     }
   }
 
-  /// PATCH /api/tasks/{id}/assign?assigneeId={assigneeId}
+  /// PATCH /api/tasks/{id}/assign
   Future<TaskResponse> assignTask(int id, int assigneeId) async {
     try {
+      final request = AssignTaskRequest(assigneeId: assigneeId);
       final response = await _apiClient.patch(
         '/tasks/$id/assign',
-        queryParameters: {'assigneeId': assigneeId},
+        data: request.toJson(),
       );
       return TaskResponse.fromJson(response.data);
     } catch (e) {
@@ -32,14 +32,37 @@ class TaskService {
     }
   }
 
-  /// PATCH /api/tasks/{id}/status?status={status}
+  /// PATCH /api/tasks/{id}/status
   Future<TaskResponse> updateTaskStatus(int id, TaskStatus status) async {
     try {
+      final request = UpdateTaskStatusRequest(status: status);
       final response = await _apiClient.patch(
         '/tasks/$id/status',
-        queryParameters: {'status': status.name},
+        data: request.toJson(),
       );
       return TaskResponse.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// PATCH /api/tasks/{id}
+  Future<TaskResponse> updateTask(int id, UpdateTaskRequest request) async {
+    try {
+      final response = await _apiClient.patch(
+        '/tasks/$id',
+        data: request.toJson(),
+      );
+      return TaskResponse.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// DELETE /api/tasks/{id}
+  Future<void> softDeleteTask(int id) async {
+    try {
+      await _apiClient.delete('/tasks/$id');
     } catch (e) {
       rethrow;
     }

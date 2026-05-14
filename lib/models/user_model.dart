@@ -10,6 +10,12 @@ enum Role {
   ADMIN,
 }
 
+enum AvailabilityStatus {
+  AVAILABLE,
+  BUSY,
+  AWAY,
+}
+
 class AddUserSkillRequest {
   final int skillId;
   final ExperienceLevel experienceLevel;
@@ -56,16 +62,19 @@ class UserSummaryResponse {
 class ChangePasswordRequest {
   final String oldPassword;
   final String newPassword;
+  final String confirmNewPassword;
 
   ChangePasswordRequest({
     required this.oldPassword,
     required this.newPassword,
+    required this.confirmNewPassword,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'oldPassword': oldPassword,
       'newPassword': newPassword,
+      'confirmNewPassword': confirmNewPassword,
     };
   }
 }
@@ -75,12 +84,14 @@ class UpdateProfileRequest {
   final String lastName;
   final String bio;
   final String? profilePictureUrl;
+  final AvailabilityStatus availabilityStatus;
 
   UpdateProfileRequest({
     required this.firstName,
     required this.lastName,
     required this.bio,
     this.profilePictureUrl,
+    required this.availabilityStatus,
   });
 
   Map<String, dynamic> toJson() {
@@ -89,7 +100,31 @@ class UpdateProfileRequest {
       'lastName': lastName,
       'bio': bio,
       'profilePictureUrl': profilePictureUrl,
+      'availabilityStatus': availabilityStatus.name,
     };
+  }
+}
+
+class PastProjectResponse {
+  final int id;
+  final String name;
+  final String status;
+  final String role;
+
+  PastProjectResponse({
+    required this.id,
+    required this.name,
+    required this.status,
+    required this.role,
+  });
+
+  factory PastProjectResponse.fromJson(Map<String, dynamic> json) {
+    return PastProjectResponse(
+      id: json['id'],
+      name: json['name'],
+      status: json['status'],
+      role: json['role'],
+    );
   }
 }
 
@@ -102,6 +137,10 @@ class UserProfileResponse {
   final String? profilePictureUrl;
   final bool isActive;
   final Role role;
+  final AvailabilityStatus availabilityStatus;
+  final List<UserSkillResponse> skills;
+  final List<PastProjectResponse> pastProjects;
+  final double averageRating;
 
   UserProfileResponse({
     required this.id,
@@ -112,6 +151,10 @@ class UserProfileResponse {
     this.profilePictureUrl,
     required this.isActive,
     required this.role,
+    required this.availabilityStatus,
+    required this.skills,
+    required this.pastProjects,
+    required this.averageRating,
   });
 
   factory UserProfileResponse.fromJson(Map<String, dynamic> json) {
@@ -120,10 +163,18 @@ class UserProfileResponse {
       email: json['email'],
       firstName: json['firstName'],
       lastName: json['lastName'],
-      bio: json['bio'],
+      bio: json['bio'] ?? '',
       profilePictureUrl: json['profilePictureUrl'],
-      isActive: json['isActive'],
+      isActive: json['isActive'] ?? true,
       role: Role.values.byName(json['role']),
+      availabilityStatus: AvailabilityStatus.values.byName(json['availabilityStatus'] ?? 'AVAILABLE'),
+      skills: (json['skills'] as List? ?? [])
+          .map((s) => UserSkillResponse.fromJson(s))
+          .toList(),
+      pastProjects: (json['pastProjects'] as List? ?? [])
+          .map((p) => PastProjectResponse.fromJson(p))
+          .toList(),
+      averageRating: (json['averageRating'] as num? ?? 0.0).toDouble(),
     );
   }
 }

@@ -4,15 +4,16 @@ import 'package:advsw/services/api_client.dart';
 class InvitationService {
   final ApiClient _apiClient = ApiClient();
 
-  /// POST /api/invitations/invite?projectId={projectId}&receiverId={receiverId}
+  /// POST /api/invitations/invite
   Future<InvitationResponse> sendInvite(int projectId, int receiverId) async {
     try {
+      final request = CreateInvitationRequest(
+        projectId: projectId,
+        receiverId: receiverId,
+      );
       final response = await _apiClient.post(
         '/invitations/invite',
-        queryParameters: {
-          'projectId': projectId,
-          'receiverId': receiverId,
-        },
+        data: request.toJson(),
       );
       return InvitationResponse.fromJson(response.data);
     } catch (e) {

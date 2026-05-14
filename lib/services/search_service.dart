@@ -51,10 +51,35 @@ class SearchService {
     }
   }
 
-  /// GET /api/search/projects
-  Future<List<SearchProjectResult>> browseOpenProjects() async {
+  /// GET /api/search/users/advanced?name={name}&skillIds={skillIds}
+  Future<List<SearchUserResult>> searchUsers({String? name, List<int>? skillIds}) async {
     try {
-      final response = await _apiClient.get('/search/projects');
+      final Map<String, dynamic> params = {};
+      if (name != null && name.isNotEmpty) {
+        params['name'] = name;
+      }
+      if (skillIds != null && skillIds.isNotEmpty) {
+        params['skillIds'] = skillIds.join(',');
+      }
+      
+      final response = await _apiClient.get(
+        '/search/users/advanced',
+        queryParameters: params,
+      );
+      final List<dynamic> data = response.data;
+      return data.map((json) => SearchUserResult.fromJson(json)).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// GET /api/search/projects?name={name}
+  Future<List<SearchProjectResult>> browseOpenProjects({String? name}) async {
+    try {
+      final response = await _apiClient.get(
+        '/search/projects',
+        queryParameters: name != null && name.isNotEmpty ? {'name': name} : null,
+      );
       final List<dynamic> data = response.data;
       return data.map((json) => SearchProjectResult.fromJson(json)).toList();
     } catch (e) {

@@ -9,14 +9,14 @@ class CreateTaskRequest {
   final String description;
   final DateTime deadline;
   final int projectId;
-  final int assigneeId;
+  final int? assigneeId;
 
   CreateTaskRequest({
     required this.title,
     required this.description,
     required this.deadline,
     required this.projectId,
-    required this.assigneeId,
+    this.assigneeId,
   });
 
   Map<String, dynamic> toJson() {
@@ -37,9 +37,11 @@ class TaskResponse {
   final TaskStatus status;
   final DateTime deadline;
   final int projectId;
-  final int assigneeId;
-  final String assigneeName;
+  final int? assigneeId;
+  final String? assigneeName;
   final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   TaskResponse({
     required this.id,
@@ -48,9 +50,11 @@ class TaskResponse {
     required this.status,
     required this.deadline,
     required this.projectId,
-    required this.assigneeId,
-    required this.assigneeName,
+    this.assigneeId,
+    this.assigneeName,
     required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   factory TaskResponse.fromJson(Map<String, dynamic> json) {
@@ -63,8 +67,34 @@ class TaskResponse {
       projectId: json['projectId'],
       assigneeId: json['assigneeId'],
       assigneeName: json['assigneeName'],
-      isDeleted: json['isDeleted'],
+      isDeleted: json['isDeleted'] ?? false,
+      createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: DateTime.parse(json['updatedAt']),
     );
+  }
+}
+
+class AssignTaskRequest {
+  final int assigneeId;
+
+  AssignTaskRequest({required this.assigneeId});
+
+  Map<String, dynamic> toJson() {
+    return {
+      'assigneeId': assigneeId,
+    };
+  }
+}
+
+class UpdateTaskStatusRequest {
+  final TaskStatus status;
+
+  UpdateTaskStatusRequest({required this.status});
+
+  Map<String, dynamic> toJson() {
+    return {
+      'status': status.name,
+    };
   }
 }
 
@@ -73,14 +103,14 @@ class UpdateTaskRequest {
   final String description;
   final TaskStatus status;
   final DateTime deadline;
-  final int assigneeId;
+  final int? assigneeId;
 
   UpdateTaskRequest({
     required this.title,
     required this.description,
     required this.status,
     required this.deadline,
-    required this.assigneeId,
+    this.assigneeId,
   });
 
   Map<String, dynamic> toJson() {

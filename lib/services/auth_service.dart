@@ -9,7 +9,6 @@ class AuthService {
   Future<bool> login(String email, String password) async {
     try {
       final request = AuthenticationRequest(email: email, password: password);
-      // Fixed endpoint to /auth/authenticate based on Spring controller
       final response = await _apiClient.post('/auth/authenticate', data: request.toJson());
 
       if (response.statusCode == 200) {
@@ -55,9 +54,37 @@ class AuthService {
     }
   }
 
+  Future<bool> forgotPassword(String email) async {
+    try {
+      final request = ForgotPasswordRequest(email: email);
+      final response = await _apiClient.post('/auth/forgot-password', data: request.toJson());
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> resetPassword(String token, String newPassword) async {
+    try {
+      final request = ResetPasswordRequest(token: token, newPassword: newPassword);
+      final response = await _apiClient.post('/auth/reset-password', data: request.toJson());
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
   Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
+    try {
+      // Call backend to invalidate the session/token
+      await _apiClient.post('/auth/logout');
+    } catch (e) {
+      // If logout fails (e.g. token already expired), we still clear local data
+      print("Backend logout failed: $e");
+    } finally {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_tokenKey);
+    }
   }
 
   Future<bool> isLoggedIn() async {

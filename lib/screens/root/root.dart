@@ -1,117 +1,70 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:advsw/theme/app_theme.dart';
 
 class RootScreen extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
-
   const RootScreen({required this.navigationShell, super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true, // Content flows behind the glass nav bar
+      extendBody: true,
       body: navigationShell,
-      bottomNavigationBar: CustomBottomNavBar(
+      bottomNavigationBar: _BottomNav(
         currentIndex: navigationShell.currentIndex,
-        onTap: (index) {
-          // Visual Indices: 0: Home, 1: Search, 2: Projects, 3: Profile, 4: Updates
-          // Router Branches: 0: Home, 1: Projects, 2: Profile, 3: Notifications
-          if (index == 0) {
-            navigationShell.goBranch(0);
-          } else if (index == 2) {
-            navigationShell.goBranch(1);
-          } else if (index == 3) {
-            navigationShell.goBranch(2);
-          } else if (index == 4) {
-            navigationShell.goBranch(3);
-          }
-          // Search (index 1) can be handled here if added later
-        },
+        onTap: (i) => navigationShell.goBranch(i),
       ),
     );
   }
 }
 
-class CustomBottomNavBar extends StatelessWidget {
+class _BottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
 
-  const CustomBottomNavBar({
-    super.key,
-    required this.currentIndex,
-    required this.onTap,
-  });
+  const _BottomNav({required this.currentIndex, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    // Maps router branch index (0, 1, 2, 3) to visual index (0, 2, 3, 4)
-    int displayIndex;
-    if (currentIndex == 0) {
-      displayIndex = 0;
-    } else if (currentIndex == 1) {
-      displayIndex = 2;
-    } else if (currentIndex == 2) {
-      displayIndex = 3;
-    } else {
-      displayIndex = 4;
-    }
+    const items = [
+      (Icons.home_rounded,          Icons.home_outlined,          'Home'),
+      (Icons.search_rounded,        Icons.search_rounded,         'Discover'),
+      (Icons.grid_view_rounded,     Icons.grid_view_outlined,     'Projects'),
+      (Icons.person_rounded,        Icons.person_outline_rounded, 'Profile'),
+      (Icons.notifications_rounded, Icons.notifications_none_rounded, 'Updates'),
+    ];
 
     return Container(
       decoration: BoxDecoration(
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 30,
-            offset: const Offset(0, -10),
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 20, offset: const Offset(0, -8)),
         ],
       ),
       child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
           child: Container(
-            padding: const EdgeInsets.only(top: 12, bottom: 20, left: 16, right: 16),
+            padding: const EdgeInsets.only(left: 6, right: 6, top: 8, bottom: 20),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-              border: Border.all(color: Colors.white.withOpacity(0.2)),
+              color: Colors.white.withValues(alpha: 0.92),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              border: Border(top: BorderSide(color: AppColors.teal700.withValues(alpha: 0.08))),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _NavBarItem(
-                  icon: Icons.home_rounded,
-                  label: 'Home',
-                  isSelected: displayIndex == 0,
-                  onTap: () => onTap(0),
-                ),
-                _NavBarItem(
-                  icon: Icons.search_rounded,
-                  label: 'Search',
-                  isSelected: displayIndex == 1,
-                  onTap: () => onTap(1),
-                ),
-                _NavBarItem(
-                  icon: Icons.grid_view_rounded,
-                  label: 'Projects',
-                  isSelected: displayIndex == 2,
-                  onTap: () => onTap(2),
-                ),
-                _NavBarItem(
-                  icon: Icons.person_rounded,
-                  label: 'Profile',
-                  isSelected: displayIndex == 3,
-                  onTap: () => onTap(3),
-                ),
-                _NavBarItem(
-                  icon: Icons.notifications_rounded,
-                  label: 'Updates',
-                  isSelected: displayIndex == 4,
-                  onTap: () => onTap(4),
-                ),
-              ],
+              children: List.generate(items.length, (i) {
+                final active = currentIndex == i;
+                return _NavItem(
+                  iconFilled:   items[i].$1,
+                  iconOutlined: items[i].$2,
+                  label:        items[i].$3,
+                  active:       active,
+                  onTap:        () => onTap(i),
+                );
+              }),
             ),
           ),
         ),
@@ -120,16 +73,18 @@ class CustomBottomNavBar extends StatelessWidget {
   }
 }
 
-class _NavBarItem extends StatelessWidget {
-  final IconData icon;
+class _NavItem extends StatelessWidget {
+  final IconData iconFilled;
+  final IconData iconOutlined;
   final String label;
-  final bool isSelected;
+  final bool active;
   final VoidCallback onTap;
 
-  const _NavBarItem({
-    required this.icon,
+  const _NavItem({
+    required this.iconFilled,
+    required this.iconOutlined,
     required this.label,
-    required this.isSelected,
+    required this.active,
     required this.onTap,
   });
 
@@ -139,39 +94,36 @@ class _NavBarItem extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 280),
         curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: EdgeInsets.symmetric(horizontal: active ? 16 : 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF004253) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFF004253).withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  )
-                ]
+          color: active ? AppColors.teal700 : Colors.transparent,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: active
+              ? [BoxShadow(color: AppColors.teal700.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))]
               : null,
         ),
-        child: Column(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              icon,
-              color: isSelected ? Colors.white : const Color(0xFF94A3B8),
-              size: 24,
+              active ? iconFilled : iconOutlined,
+              size: 22,
+              color: active ? Colors.white : AppColors.ink400,
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : const Color(0xFF94A3B8),
-                fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                fontFamily: 'Inter',
-              ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 280),
+              curve: Curves.easeOutCubic,
+              child: active
+                  ? Row(children: [
+                      const SizedBox(width: 6),
+                      Text(label,
+                        style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white,
+                        )),
+                    ])
+                  : const SizedBox.shrink(),
             ),
           ],
         ),

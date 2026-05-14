@@ -1,7 +1,7 @@
-import 'package:advsw/screens/auth/signup_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:advsw/screens/auth/widgets.dart';
 import 'package:go_router/go_router.dart';
+import 'package:advsw/theme/app_theme.dart';
+import 'widgets.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,103 +11,169 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _emailCtrl    = TextEditingController(text: 'alex.rivera@quietengine.io');
+  final _passwordCtrl = TextEditingController(text: 'demo1234');
+  bool _remember = true;
 
-  //colors
-  final Color primaryTeal = const Color(0xFF004253);
-  final Color grayText = const Color(0xFF6E797C);
-  final Color bgColor = const Color(0xFFF2F4F6);
-
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
-  bool _obsecurePassword = true;
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgColor,
-          body: SafeArea(child:SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      backgroundColor: AppColors.bgAlt,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment(-0.6, -1.2),
+            radius: 1.4,
+            colors: [Color(0xFFE8F2F8), AppColors.bgAlt],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
             child: Column(
-        children: [
-          SizedBox(height: 20,),
-          Icon(Icons.folder,color: primaryTeal,size: 70,),
-          SizedBox(height: 10,),
-          Text('ADV SW',style: TextStyle(
-            color: primaryTeal,
-            fontSize: 28,
-            fontWeight: FontWeight.bold
-          ),),
-          SizedBox(height: 10,),
-          Text('yap yap yap',style: TextStyle(color: grayText ,fontSize: 10)),
-          SizedBox(height: 20,),
-          Container(
-            padding: EdgeInsets.all(28),
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(32),
-                boxShadow:[ BoxShadow(color: Colors.black.withOpacity(0.04),
-                  blurRadius: 24,
-                  offset: Offset(0, 8))
-              ]
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              BuildLabel(label: 'EMAIL'),
-              BuildTextField(hint: 'nigga@mail.com', icon: Icons.mail, controller: emailController),
-              SizedBox(height: 20),
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                BuildLabel(label: 'PASSWORD'),
-                TextButton(
-                    onPressed:(){},
-                    child:Text(
-                      'forgot password?',
-                      style: TextStyle(
-                          fontSize:10,
-                          color:primaryTeal,
-                          fontWeight: FontWeight.bold
-                      ),
-                    )
-                )
-              ]),
-              BuildTextField(
-                hint: '********',
-                icon: Icons.password,
-                controller: passwordController,
-                ispassword: true,
-                obscurePassword: _obsecurePassword,
-              ),
-              SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(onPressed: (){
-                  context.go('/home');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryTeal,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(20)),
-                  elevation: 3
-                ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [Text('log in', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),SizedBox(width: 8),Icon(Icons.login,size: 20)],
+              children: [
+                const SizedBox(height: 16),
+                // Logo + branding
+                const AppLogo(size: 60),
+                const SizedBox(height: 14),
+                const Text(
+                  'ProjectPal',
+                  style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.ink900,
+                    letterSpacing: -0.02 * 30,
                   ),
                 ),
-              ),
-              SizedBox(height: 10)
-            ],
+                const SizedBox(height: 6),
+                const Text(
+                  'Pair up, ship together.',
+                  style: TextStyle(fontSize: 13, color: AppColors.ink500),
+                ),
+                const SizedBox(height: 28),
+
+                // Card
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(color: AppColors.lineSoft),
+                    boxShadow: AppTheme.shadowLg,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AuthField(
+                        label: 'EMAIL',
+                        hint: 'you@work.com',
+                        icon: Icons.mail_outline_rounded,
+                        controller: _emailCtrl,
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'PASSWORD',
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: AppColors.ink500),
+                          ),
+                          TextButton(
+                            onPressed: () {},
+                            style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                            child: const Text('Forgot?', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.teal700)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      AuthField(
+                        label: '',
+                        hint: '••••••••',
+                        icon: Icons.lock_outline_rounded,
+                        controller: _passwordCtrl,
+                        isPassword: true,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Remember me
+                      GestureDetector(
+                        onTap: () => setState(() => _remember = !_remember),
+                        child: Row(
+                          children: [
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 150),
+                              width: 18, height: 18,
+                              decoration: BoxDecoration(
+                                color: _remember ? AppColors.teal700 : Colors.white,
+                                borderRadius: BorderRadius.circular(5),
+                                border: Border.all(color: _remember ? AppColors.teal700 : AppColors.ink300, width: 1.5),
+                              ),
+                              child: _remember
+                                  ? const Icon(Icons.check_rounded, size: 13, color: Colors.white)
+                                  : null,
+                            ),
+                            const SizedBox(width: 10),
+                            const Text('Keep me signed in', style: TextStyle(fontSize: 12, color: AppColors.ink700)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      PrimaryBtn(
+                        label: 'Sign in',
+                        trailing: Icons.arrow_forward_rounded,
+                        onPressed: () => context.go('/home'),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // OR divider
+                      Row(
+                        children: [
+                          const Expanded(child: Divider(color: AppColors.line)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text('OR CONTINUE WITH', style: TextStyle(fontSize: 10, color: AppColors.ink400, letterSpacing: 0.8)),
+                          ),
+                          const Expanded(child: Divider(color: AppColors.line)),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      Row(
+                        children: [
+                          Expanded(child: SocialBtn(label: 'Google', icon: Icons.g_mobiledata_rounded, onPressed: () => context.go('/home'))),
+                          const SizedBox(width: 10),
+                          Expanded(child: SocialBtn(label: 'Apple', icon: Icons.apple_rounded, onPressed: () => context.go('/home'))),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 28),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('New to ProjectPal? ', style: TextStyle(fontSize: 13, color: AppColors.ink500)),
+                    GestureDetector(
+                      onTap: () => context.go('/signup'),
+                      child: const Text('Create an account', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.teal700)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [Text('dont have acc?'), SizedBox(width: 4), TextButton(onPressed: (){context.go('/signup');}, child: Text('sign up'))],)
-
-        ],
-    ),
-          )));
+        ),
+      ),
+    );
   }
 }
-

@@ -1,333 +1,201 @@
 import 'package:flutter/material.dart';
-import 'widgets.dart';
+import 'package:advsw/theme/app_theme.dart';
+import 'package:advsw/data/seed_data.dart';
 
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
+
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  late List<AppNotification> _notifs;
+
+  @override
+  void initState() {
+    super.initState();
+    _notifs = List.from(SeedData.notifications);
+  }
+
+  void _dismiss(String id) => setState(() => _notifs.removeWhere((n) => n.id == id));
+  void _clearAll() => setState(() => _notifs.clear());
+
+  List<AppNotification> get _today => _notifs
+      .where((n) => n.meta.contains('ago') || n.meta.contains('m ago') || n.meta.contains('h ago'))
+      .toList();
+
+  List<AppNotification> get _earlier => _notifs
+      .where((n) => !n.meta.contains('ago') || n.meta.contains('Yesterday'))
+      .toList();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: CustomScrollView(
-        slivers: [
-          _buildAppBar(context),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Notifications',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
-                      fontFamily: 'Manrope',
-                      color: Color(0xFF004253),
+      backgroundColor: AppColors.bg,
+      body: SafeArea(
+        child: Column(children: [
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: Row(
+              children: [
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('Updates', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.ink900, letterSpacing: -0.4)),
+                  Text('${_notifs.length} new', style: const TextStyle(fontSize: 11, color: AppColors.ink500)),
+                ])),
+                GestureDetector(
+                  onTap: _clearAll,
+                  child: Container(
+                    width: 40, height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white, borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.line), boxShadow: AppTheme.shadowSm,
                     ),
+                    child: const Icon(Icons.done_all_rounded, size: 20, color: AppColors.ink700),
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Stay updated with your latest team activity.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF40484C),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  const NotificationSectionHeader(
-                    title: 'Today',
-                    badgeText: '3 NEW',
-                  ),
-                  NotificationCard(
-                    title: 'Deadline Reminder',
-                    time: '2h ago',
-                    icon: Icons.event_busy,
-                    iconBgColor: const Color(0xFFFFDCC6),
-                    iconColor: const Color(0xFF622E00),
-                    borderColor: const Color(0xFF622E00),
-                    isUnread: true,
-                    backgroundColor: Colors.white,
-                    content: RichText(
-                      text: const TextSpan(
-                        style: TextStyle(fontSize: 14, color: Color(0xFF536772)),
-                        children: [
-                          TextSpan(
-                            text: 'Final PDF Export',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF004253),
-                            ),
-                          ),
-                          TextSpan(text: ' is due today. Review requirements before submission.'),
-                        ],
-                      ),
-                    ),
-                    action: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF622E00),
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      ),
-                      child: const Text(
-                        'Review Task',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  NotificationCard(
-                    title: 'Team Activity',
-                    time: '4h ago',
-                    icon: Icons.group_add,
-                    iconBgColor: const Color(0xFFD0E6F3),
-                    iconColor: const Color(0xFF4D616C),
-                    isUnread: true,
-                    backgroundColor: Colors.white,
-                    content: RichText(
-                      text: const TextSpan(
-                        style: TextStyle(fontSize: 14, color: Color(0xFF536772)),
-                        children: [
-                          TextSpan(
-                            text: 'Marcus V.',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF004253),
-                            ),
-                          ),
-                          TextSpan(text: ' joined '),
-                          TextSpan(
-                            text: 'Aris Brand Identity',
-                            style: TextStyle(fontStyle: FontStyle.italic),
-                          ),
-                          TextSpan(text: ' project.'),
-                        ],
-                      ),
-                    ),
-                  ),
-                  NotificationCard(
-                    title: 'Project Update',
-                    time: '5h ago',
-                    icon: Icons.chat_bubble,
-                    iconBgColor: const Color(0xFFB7EAFF).withOpacity(0.2),
-                    iconColor: const Color(0xFF004253),
-                    isUnread: true,
-                    backgroundColor: Colors.white,
-                    content: RichText(
-                      text: const TextSpan(
-                        style: TextStyle(fontSize: 14, color: Color(0xFF536772)),
-                        children: [
-                          TextSpan(
-                            text: 'Sarah Miller',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF004253),
-                            ),
-                          ),
-                          TextSpan(text: ' commented on '),
-                          TextSpan(
-                            text: 'Hero Section v2',
-                            style: TextStyle(fontWeight: FontWeight.w500),
-                          ),
-                          TextSpan(text: ': "The gradients look much cleaner now!"'),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const NotificationSectionHeader(title: 'Earlier'),
-                  Opacity(
-                    opacity: 0.8,
-                    child: Column(
-                      children: [
-                        NotificationCard(
-                          title: 'Status Update',
-                          time: 'Yesterday',
-                          icon: Icons.check_circle,
-                          iconBgColor: const Color(0xFFE1E3E4),
-                          iconColor: const Color(0xFF40484C),
-                          backgroundColor: const Color(0xFFF2F4F5),
-                          content: RichText(
-                            text: TextSpan(
-                              style: const TextStyle(fontSize: 14, color: Color(0xFF536772)),
-                              children: [
-                                const TextSpan(text: 'Project '),
-                                const TextSpan(
-                                  text: 'Nexus Slate',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    color: Color(0xFF004253),
-                                  ),
-                                ),
-                                const TextSpan(text: ' status changed to '),
-                                WidgetSpan(
-                                  alignment: PlaceholderAlignment.middle,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF004253).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: const Text(
-                                      'IN REVIEW',
-                                      style: TextStyle(
-                                        color: Color(0xFF004253),
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const TextSpan(text: '.'),
-                              ],
-                            ),
-                          ),
-                        ),
-                        NotificationCard(
-                          title: 'New Assignment',
-                          time: '2 days ago',
-                          icon: Icons.assignment_turned_in,
-                          iconBgColor: const Color(0xFFE1E3E4),
-                          iconColor: const Color(0xFF40484C),
-                          backgroundColor: const Color(0xFFF2F4F5),
-                          content: RichText(
-                            text: const TextSpan(
-                              style: TextStyle(fontSize: 14, color: Color(0xFF536772)),
-                              children: [
-                                TextSpan(
-                                  text: 'Alex Chen',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF004253),
-                                  ),
-                                ),
-                                TextSpan(text: ' assigned you to '),
-                                TextSpan(
-                                  text: 'User Testing Feedback',
-                                  style: TextStyle(fontWeight: FontWeight.w500),
-                                ),
-                                TextSpan(text: '.'),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 100),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ],
+
+          Expanded(
+            child: _notifs.isEmpty
+                ? _EmptyState()
+                : ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 110),
+                    children: [
+                      if (_today.isNotEmpty) ...[
+                        _GroupLabel('Today'),
+                        ..._today.map((n) => _NotifItem(n: n, onDismiss: () => _dismiss(n.id), onAction: () => _dismiss(n.id))),
+                      ],
+                      if (_earlier.isNotEmpty) ...[
+                        _GroupLabel('Earlier'),
+                        ..._earlier.map((n) => _NotifItem(n: n, onDismiss: () => _dismiss(n.id), onAction: () => _dismiss(n.id))),
+                      ],
+                    ],
+                  ),
+          ),
+        ]),
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
+}
 
-  Widget _buildAppBar(BuildContext context) {
-    return SliverAppBar(
-      floating: true,
-      pinned: false,
-      backgroundColor: Colors.white.withOpacity(0.8),
-      elevation: 0,
-      centerTitle: false,
-      title: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              image: DecorationImage(
-                image: NetworkImage('https://lh3.googleusercontent.com/aida-public/AB6AXuDepvnSKOFPqWSGmoI2mx6G7PwbXGeYPPJl2YFKkNItIbAutv4IhAbJOB2Zwl-XQkpqVDLzlmqQTqX3bxX6EhCPN1WvoumZNXjsqkdMNqvl7GVFwFGq47fbEZ0AfCuenYCY-ZtWa9u6DXrTK_UD_JoaGOq17QbEOCL1dRvQwqc4dBaG4Z4hOLC_kyWrhknU4JR0iAXfQAZo-Vgm8WVNLCLojJ1t7vsRiaBwIJIhVyoWd7lCwE5ERI_JHOhWxKaMx3F-d2KFYfl-_0Q'),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Text(
-            'The Quiet Engine',
-            style: TextStyle(
-              fontFamily: 'Manrope',
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF004253),
-              fontSize: 16,
-              letterSpacing: -0.5,
-            ),
-          ),
-        ],
+// ── Widgets ───────────────────────────────────────────────────────────────────
+
+class _GroupLabel extends StatelessWidget {
+  final String label;
+  const _GroupLabel(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 12, bottom: 8),
+      child: Text(label.toUpperCase(),
+        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: AppColors.ink500)),
+    );
+  }
+}
+
+class _NotifItem extends StatelessWidget {
+  final AppNotification n;
+  final VoidCallback onDismiss;
+  final VoidCallback onAction;
+
+  const _NotifItem({required this.n, required this.onDismiss, required this.onAction});
+
+  ({Color bg, Color fg}) get _tone {
+    switch (n.type) {
+      case 'deadline': return (bg: AppColors.warm100,    fg: AppColors.warm700);
+      case 'task':     return (bg: AppColors.teal50,     fg: AppColors.teal700);
+      case 'message':  return (bg: const Color(0xFFE8F4FA), fg: const Color(0xFF0E5B85));
+      default:         return (bg: const Color(0xFFF1ECFB), fg: const Color(0xFF5A399E));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = _tone;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white, borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.lineSoft), boxShadow: AppTheme.shadowSm,
       ),
-      actions: [
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.search, color: Color(0xFF001F28)),
-          style: IconButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            hoverColor: Colors.black12,
-          ),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+          width: 38, height: 38,
+          decoration: BoxDecoration(color: t.bg, borderRadius: BorderRadius.circular(12)),
+          child: Icon(n.icon, size: 18, color: t.fg),
         ),
         const SizedBox(width: 12),
-      ],
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(n.title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.ink900)),
+          const SizedBox(height: 2),
+          Text(n.body, style: const TextStyle(fontSize: 12, color: AppColors.ink700, height: 1.4)),
+          const SizedBox(height: 6),
+          Text(n.meta, style: const TextStyle(fontSize: 10, color: AppColors.ink500)),
+          if (n.actionable) ...[
+            const SizedBox(height: 10),
+            Row(children: [
+              _ActionBtn(label: 'Accept', onTap: onAction),
+              const SizedBox(width: 8),
+              _ActionBtn(label: 'Decline', onTap: onDismiss, secondary: true),
+            ]),
+          ],
+        ])),
+        GestureDetector(
+          onTap: onDismiss,
+          child: const Padding(padding: EdgeInsets.all(4), child: Icon(Icons.close_rounded, size: 16, color: AppColors.ink400)),
+        ),
+      ]),
     );
   }
+}
 
-  Widget _buildBottomNavBar() {
-    return Container(
-      height: 90,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF19667D).withOpacity(0.06),
-            blurRadius: 24,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(Icons.dashboard, 'Studio', isSelected: false),
-          _buildNavItem(Icons.assignment, 'Tasks', isSelected: false),
-          _buildNavItem(Icons.notifications, 'Updates', isSelected: true),
-          _buildNavItem(Icons.settings, 'Settings', isSelected: false),
-        ],
+class _ActionBtn extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  final bool secondary;
+  const _ActionBtn({required this.label, required this.onTap, this.secondary = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: secondary ? Colors.white : AppColors.teal700,
+          border: secondary ? Border.all(color: AppColors.line) : null,
+          gradient: secondary ? null : AppTheme.primaryGradient,
+          boxShadow: secondary ? null : [BoxShadow(color: AppColors.teal700.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 4))],
+        ),
+        child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: secondary ? AppColors.ink700 : Colors.white)),
       ),
     );
   }
+}
 
-  Widget _buildNavItem(IconData icon, String label, {bool isSelected = false}) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
+class _EmptyState extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFFB7EAFF).withOpacity(0.4) : Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Icon(
-            icon,
-            color: isSelected ? const Color(0xFF004253) : const Color(0xFF70787D),
-            size: 24,
-          ),
+          width: 56, height: 56,
+          decoration: const BoxDecoration(color: AppColors.teal50, shape: BoxShape.circle),
+          child: const Icon(Icons.notifications_off_outlined, size: 28, color: AppColors.teal700),
         ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-            color: isSelected ? const Color(0xFF004253) : const Color(0xFF70787D),
-          ),
-        ),
-      ],
+        const SizedBox(height: 12),
+        const Text('All caught up', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink900)),
+        const SizedBox(height: 6),
+        const Text("You'll see new assignments,\nmentions and deadlines here.",
+          textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: AppColors.ink500)),
+      ]),
     );
   }
 }

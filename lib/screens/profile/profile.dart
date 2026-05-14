@@ -1,208 +1,259 @@
-import 'package:advsw/screens/profile/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:advsw/theme/app_theme.dart';
+import 'package:advsw/data/seed_data.dart';
+import 'package:advsw/screens/home/widgets.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends State<ProfileScreen> {
-  @override
   Widget build(BuildContext context) {
+    final u = SeedData.currentUser;
+    final myProjects = SeedData.projects.where((p) => p.members.any((m) => m.id == u.id)).toList();
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: AppColors.bg,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Top Bar
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'The Quiet Engine',
-                    style: TextStyle(
-                      fontFamily: 'Manrope',
-                      fontWeight: FontWeight.w800,
-                      fontSize: 18,
-                      color: Color(0xFF004253),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.notifications_none, color: Color(0xFF004253)),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.white,
-                    ),
-                  ),
-                ],
+        child: CustomScrollView(
+          slivers: [
+            // Header
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Profile', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.ink900, letterSpacing: -0.4)),
+                    Row(children: [
+                      _HeaderBtn(icon: Icons.settings_outlined, onTap: () {}),
+                      const SizedBox(width: 8),
+                      _HeaderBtn(icon: Icons.logout_rounded, onTap: () => context.go('/login')),
+                    ]),
+                  ],
+                ),
               ),
-              const SizedBox(height: 48),
+            ),
 
-              // Profile Header
-              Stack(
-                alignment: Alignment.bottomRight,
-                children: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+
+                  // ── Hero card ────────────────────────────────────────────────
                   Container(
-                    width: 128,
-                    height: 128,
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
                     decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFE1E3E4), width: 4),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        )
-                      ],
-                      image: const DecorationImage(
-                        image: NetworkImage('https://lh3.googleusercontent.com/aida-public/AB6AXuABgiKX_FDZaKm2AVVJUIUad7frnKuCuOinVz0WjYTgWLXYSLPsC7UZFPGCX7bpPRieIsXs0MntDZO_deP2YiOV9K7tGhcgZyGGDoza1AE26qlUca7erNUNJ0TV6ZtL3l7HFCvOiU8l2xHQVRpLamUaSgNZTGGwtAxJ5rk1QDxT9Z_L_8N6vUJKDJBT6ZVtBuTHnKGT10wAyL9bNKsL2sAgLbqZDhuMYGAi85EEpF792bg_JHnPTEY3CENccFgayNxfn0PLc4CjFRo'),
-                        fit: BoxFit.cover,
+                      borderRadius: BorderRadius.circular(28),
+                      gradient: const LinearGradient(
+                        colors: [AppColors.teal700, AppColors.teal600],
+                        begin: Alignment.topLeft, end: Alignment.bottomRight,
                       ),
                     ),
+                    child: Stack(children: [
+                      Positioned(right: -60, top: -60,
+                        child: Container(width: 200, height: 200, decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(colors: [AppColors.aqua.withValues(alpha: 0.3), Colors.transparent]),
+                        ))),
+                      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Row(children: [
+                          UserAvatar(name: u.name, size: 68, status: u.status, ring: 3),
+                          const SizedBox(width: 16),
+                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text(u.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3)),
+                            const SizedBox(height: 2),
+                            Text(u.email, style: const TextStyle(fontSize: 11, color: Colors.white70)),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(999)),
+                              child: Row(mainAxisSize: MainAxisSize.min, children: const [
+                                CircleAvatar(backgroundColor: Color(0xFF5BE6A4), radius: 3),
+                                SizedBox(width: 6),
+                                Text('Available', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
+                              ]),
+                            ),
+                          ])),
+                        ]),
+                        const SizedBox(height: 16),
+                        Text(u.bio, style: const TextStyle(fontSize: 13, color: Colors.white70, height: 1.5)),
+                        const SizedBox(height: 16),
+                        Row(children: [
+                          _HeroBtn(label: 'Edit profile', icon: Icons.edit_outlined, onTap: () {}),
+                          const SizedBox(width: 8),
+                          _HeroBtn(label: 'Share', icon: Icons.share_outlined, onTap: () {}, ghost: true),
+                        ]),
+                      ]),
+                    ]),
                   ),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        )
-                      ],
-                    ),
-                    child: const Icon(Icons.edit, color: Color(0xFF004253), size: 20),
+
+                  // ── Stats ────────────────────────────────────────────────────
+                  const SizedBox(height: 16),
+                  Row(children: [
+                    _StatCard(icon: Icons.grid_view_rounded, value: '${myProjects.length}', label: 'Projects'),
+                    const SizedBox(width: 10),
+                    const _StatCard(icon: Icons.check_circle_outline_rounded, value: '84', label: 'Tasks done'),
+                    const SizedBox(width: 10),
+                    const _StatCard(icon: Icons.local_fire_department_rounded, value: '4d', label: 'Streak'),
+                  ]),
+
+                  // ── Skills ───────────────────────────────────────────────────
+                  SectionHeader(title: 'Skills', action: 'Edit', onAction: () {}),
+                  Wrap(
+                    spacing: 6, runSpacing: 8,
+                    children: u.skills.map((s) => _SkillTag(s, tone: 'accent')).toList(),
                   ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Alex Rivera',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w800,
-                  fontFamily: 'Manrope',
-                  color: Color(0xFF004253),
-                ),
-              ),
-              const Text(
-                'alex.rivera@quietengine.io',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF40484C),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+
+                  // ── Experience ───────────────────────────────────────────────
+                  const SectionHeader(title: 'Experience'),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF854000),
-                      borderRadius: BorderRadius.circular(99),
+                      color: Colors.white, borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: AppColors.lineSoft), boxShadow: AppTheme.shadowSm,
                     ),
-                    child: const Text(
-                      'AVAILABLE NOW',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(u.experience, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.ink900)),
+                      const SizedBox(height: 4),
+                      const Text('Set your experience level so collaborators know what to expect.',
+                        style: TextStyle(fontSize: 12, color: AppColors.ink500)),
+                    ]),
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Senior Product Architect',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF40484C),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Crafting intentional digital ecosystems through structural precision and editorial design. Specializing in high-performance project infrastructures and scalable design systems.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF40484C),
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 32),
 
-              // Skills Section
-              ProfileSectionHeader(
-                title: 'Skills',
-                icon: Icons.verified_outlined,
-                actionLabel: 'Add Skill',
-                onAction: () {},
+                  // ── Past projects ────────────────────────────────────────────
+                  SectionHeader(title: 'Past projects', action: '+ Add', onAction: () {}),
+                  ...u.pastProjects.map((p) => _PastProjectRow(name: p)),
+                ]),
               ),
-              const Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  SkillChip(label: 'UI Architecture'),
-                  SkillChip(label: 'Design Systems'),
-                  SkillChip(label: 'React Architecture'),
-                  SkillChip(label: 'Tailwind Expert'),
-                  SkillChip(label: 'User Flow Mapping'),
-                  SkillChip(label: 'Rapid Prototyping'),
-                  SkillChip(label: 'Editorial Layouts'),
-                ],
-              ),
-
-              // Previous Projects Section
-              const ProfileSectionHeader(
-                title: 'Previous Projects',
-                icon: Icons.grid_view_outlined,
-              ),
-              const ProfileProjectCard(
-                title: 'Nexus Data Core',
-                description: 'Complete architectural redesign of a real-time analytics engine processing 40M+ events daily.',
-                year: '2023',
-                role: 'Lead Designer',
-                imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuABIoUxH_bPX1SygHwUhANZvvsDKdEnk-NplqMiYamjBW8q74G_YOZNhztx0A_BeQ906vwHyH08WvSvqzanQgx92P2sKDwWtjPOkU_SrFEwNgEzsUe55rwbREADWmdt5wSN2dM2DW5IB3IymeCGj1Mx-7Uw-XH8BFM6Wl9P3WxzB2SIaLkxRhLB8S565-WJ-CSmdK9-5zCsMK_gl90dRFjOXHdvzDNl7c8ta6BKKJvKyIcn_H1NDe2uB7pqdwpbRIpGv66k_Rh95Ow',
-              ),
-              const ProfileProjectCard(
-                title: 'Zenith Fintech Shell',
-                description: 'A high-fidelity design system focused on accessibility and cognitive load reduction in high-stakes trading.',
-                year: '2022',
-                role: 'System Architect',
-                imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAc4fwUTSzwr87AqvShPEygUGwGd8O0horuM-gN2iFet6cXzKcBHNWQ1yVz29tCbO7Sievdd7AlevhHan1oOwLJr2TROWNWH5eO1dnrxguMgaUqZZNJKCZvwN5ir77xWZh-Yp68zQFlmDwgnKHtd_bcxfnLHlajWXpB9CDczgY9UmjOJJ8WGxsOJocUgHI9tCVqGJeE0jW6vPGhxmO6TTPvgoQeztTKTuTWq4EMTZQO4mtLRUDHBNa9GFLPtuxAPHYTCuGywYcv4yQ',
-              ),
-
-              const SizedBox(height: 48),
-              // Log Out Button
-              OutlinedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.logout),
-                label: const Text('Log Out'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFFBA1A1A),
-                  side: const BorderSide(color: Color(0xFFBA1A1A), width: 2),
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-              ),
-              const SizedBox(height: 100), // Padding for BottomNav
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+// ── Local widgets ──────────────────────────────────────────────────────────────
+
+class _HeaderBtn extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  const _HeaderBtn({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40, height: 40,
+        decoration: BoxDecoration(
+          color: Colors.white, borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.line), boxShadow: AppTheme.shadowSm,
+        ),
+        child: Icon(icon, size: 20, color: AppColors.ink700),
+      ),
+    );
+  }
+}
+
+class _HeroBtn extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool ghost;
+  const _HeroBtn({required this.label, required this.icon, required this.onTap, this.ghost = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: ghost ? Colors.white24 : Colors.white.withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(12),
+          border: ghost ? Border.all(color: Colors.white38) : null,
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, size: 14, color: ghost ? Colors.white : AppColors.ink900),
+          const SizedBox(width: 6),
+          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: ghost ? Colors.white : AppColors.ink900)),
+        ]),
+      ),
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+  const _StatCard({required this.icon, required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white, borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.lineSoft), boxShadow: AppTheme.shadowSm,
+        ),
+        child: Column(children: [
+          Icon(icon, size: 18, color: AppColors.teal700),
+          const SizedBox(height: 4),
+          Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink900)),
+          Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.ink500)),
+        ]),
+      ),
+    );
+  }
+}
+
+class _SkillTag extends StatelessWidget {
+  final String label;
+  final String tone;
+  const _SkillTag(this.label, {this.tone = 'neutral'});
+
+  @override
+  Widget build(BuildContext context) {
+    final isAccent = tone == 'accent';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isAccent ? AppColors.teal50 : Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: isAccent ? AppColors.teal100 : AppColors.line),
+      ),
+      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isAccent ? AppColors.teal700 : AppColors.ink700)),
+    );
+  }
+}
+
+class _PastProjectRow extends StatelessWidget {
+  final String name;
+  const _PastProjectRow({required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white, borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.lineSoft), boxShadow: AppTheme.shadowSm,
+      ),
+      child: Row(children: [
+        Container(
+          width: 32, height: 32,
+          decoration: BoxDecoration(color: AppColors.teal50, borderRadius: BorderRadius.circular(10)),
+          child: const Icon(Icons.bookmark_border_rounded, size: 16, color: AppColors.teal700),
+        ),
+        const SizedBox(width: 12),
+        Expanded(child: Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink900))),
+        const Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.ink400),
+      ]),
     );
   }
 }

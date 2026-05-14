@@ -8,15 +8,11 @@ class CreateTaskRequest {
   final String title;
   final String description;
   final DateTime deadline;
-  final int projectId;
-  final int? assigneeId;
 
   CreateTaskRequest({
     required this.title,
     required this.description,
     required this.deadline,
-    required this.projectId,
-    this.assigneeId,
   });
 
   Map<String, dynamic> toJson() {
@@ -24,8 +20,6 @@ class CreateTaskRequest {
       'title': title,
       'description': description,
       'deadline': deadline.toIso8601String(),
-      'projectId': projectId,
-      'assigneeId': assigneeId,
     };
   }
 }

@@ -1,11 +1,9 @@
 class SendMessageRequest {
-  final int projectId;
   final String content;
   final String? fileUrl;
   final String? fileName;
 
   SendMessageRequest({
-    required this.projectId,
     required this.content,
     this.fileUrl,
     this.fileName,
@@ -13,7 +11,6 @@ class SendMessageRequest {
 
   Map<String, dynamic> toJson() {
     return {
-      'projectId': projectId,
       'content': content,
       'fileUrl': fileUrl,
       'fileName': fileName,

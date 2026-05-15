@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:riverpod/riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:advsw/services/auth_service.dart';
 
 /// Provider for AuthService

@@ -1,19 +1,23 @@
+import 'package:advsw/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:advsw/theme/app_theme.dart';
 import 'package:advsw/data/seed_data.dart';
 import 'package:advsw/screens/home/widgets.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final u = SeedData.currentUser;
     final myProjects = SeedData.projects.where((p) => p.members.any((m) => m.id == u.id)).toList();
+    final isDark = ref.watch(themeProvider) == ThemeMode.dark;
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -24,9 +28,13 @@ class ProfileScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Profile', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.ink900, letterSpacing: -0.4)),
+                    Text('Profile', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: theme.colorScheme.onSurface, letterSpacing: -0.4)),
                     Row(children: [
-                      _HeaderBtn(icon: Icons.settings_outlined, onTap: () {}),
+                      Switch(
+                        value: isDark,
+                        onChanged: (val) => ref.read(themeProvider.notifier).toggleTheme(),
+                        activeColor: AppColors.teal500,
+                      ),
                       const SizedBox(width: 8),
                       _HeaderBtn(icon: Icons.logout_rounded, onTap: () => context.go('/login')),
                     ]),
@@ -110,14 +118,14 @@ class ProfileScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white, borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: AppColors.lineSoft), boxShadow: AppTheme.shadowSm,
+                      color: theme.colorScheme.surface, borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: isDark ? Colors.white10 : AppColors.lineSoft), boxShadow: isDark ? [] : AppTheme.shadowSm,
                     ),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(u.experience, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.ink900)),
+                      Text(u.experience, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: theme.colorScheme.onSurface)),
                       const SizedBox(height: 4),
-                      const Text('Set your experience level so collaborators know what to expect.',
-                        style: TextStyle(fontSize: 12, color: AppColors.ink500)),
+                      Text('Set your experience level so collaborators know what to expect.',
+                        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
                     ]),
                   ),
 
@@ -143,15 +151,16 @@ class _HeaderBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 40, height: 40,
         decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.line), boxShadow: AppTheme.shadowSm,
+          color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: isDark ? Colors.white10 : AppColors.line), boxShadow: isDark ? [] : AppTheme.shadowSm,
         ),
-        child: Icon(icon, size: 20, color: AppColors.ink700),
+        child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.onSurface),
       ),
     );
   }
@@ -193,18 +202,20 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.lineSoft), boxShadow: AppTheme.shadowSm,
+          color: theme.colorScheme.surface, borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: isDark ? Colors.white10 : AppColors.lineSoft), boxShadow: isDark ? [] : AppTheme.shadowSm,
         ),
         child: Column(children: [
-          Icon(icon, size: 18, color: AppColors.teal700),
+          Icon(icon, size: 18, color: AppColors.teal500),
           const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink900)),
-          Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.ink500)),
+          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: theme.colorScheme.onSurface)),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
         ]),
       ),
     );
@@ -219,14 +230,17 @@ class _SkillTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isAccent = tone == 'accent';
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: isAccent ? AppColors.teal50 : Colors.white,
+        color: isAccent ? (isDark ? AppColors.teal900 : AppColors.teal50) : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: isAccent ? AppColors.teal100 : AppColors.line),
+        border: Border.all(color: isAccent ? (isDark ? AppColors.teal700 : AppColors.teal100) : (isDark ? Colors.white10 : AppColors.line)),
       ),
-      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isAccent ? AppColors.teal700 : AppColors.ink700)),
+      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isAccent ? (isDark ? AppColors.aqua : AppColors.teal700) : theme.colorScheme.onSurface)),
     );
   }
 }
@@ -237,22 +251,24 @@ class _PastProjectRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white, borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.lineSoft), boxShadow: AppTheme.shadowSm,
+        color: theme.colorScheme.surface, borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isDark ? Colors.white10 : AppColors.lineSoft), boxShadow: isDark ? [] : AppTheme.shadowSm,
       ),
       child: Row(children: [
         Container(
           width: 32, height: 32,
-          decoration: BoxDecoration(color: AppColors.teal50, borderRadius: BorderRadius.circular(10)),
-          child: const Icon(Icons.bookmark_border_rounded, size: 16, color: AppColors.teal700),
+          decoration: BoxDecoration(color: isDark ? AppColors.teal900 : AppColors.teal50, borderRadius: BorderRadius.circular(10)),
+          child: Icon(Icons.bookmark_border_rounded, size: 16, color: isDark ? AppColors.aqua : AppColors.teal700),
         ),
         const SizedBox(width: 12),
-        Expanded(child: Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink900))),
-        const Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.ink400),
+        Expanded(child: Text(name, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: theme.colorScheme.onSurface))),
+        Icon(Icons.chevron_right_rounded, size: 20, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
       ]),
     );
   }

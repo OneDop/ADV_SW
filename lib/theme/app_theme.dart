@@ -36,15 +36,22 @@ class AppColors {
   // Borders
   static const Color line     = Color(0xFFE7E8E9);
   static const Color lineSoft = Color(0xFFECEEEF);
+
+  // Dark Theme Colors
+  static const Color darkBg = Color(0xFF0F172A);
+  static const Color darkSurface = Color(0xFF1E293B);
+  static const Color darkInk = Color(0xFFF1F5F9);
 }
 
 class AppTheme {
-  static ThemeData get theme => ThemeData(
+  static ThemeData get lightTheme => ThemeData(
     useMaterial3: true,
+    brightness: Brightness.light,
     colorScheme: ColorScheme.fromSeed(
       seedColor: AppColors.teal700,
       primary: AppColors.teal700,
       surface: AppColors.bg,
+      brightness: Brightness.light,
     ),
     scaffoldBackgroundColor: AppColors.bg,
     fontFamily: 'Manrope',
@@ -55,6 +62,28 @@ class AppTheme {
       foregroundColor: AppColors.ink900,
     ),
   );
+
+  static ThemeData get darkTheme => ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: AppColors.teal500,
+      primary: AppColors.teal500,
+      surface: AppColors.darkSurface,
+      brightness: Brightness.dark,
+    ),
+    scaffoldBackgroundColor: AppColors.darkBg,
+    fontFamily: 'Manrope',
+    appBarTheme: const AppBarTheme(
+      backgroundColor: AppColors.darkBg,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      foregroundColor: AppColors.darkInk,
+    ),
+  );
+
+  // Maintain backward compatibility for now
+  static ThemeData get theme => lightTheme;
 
   // Gradient helpers
   static const LinearGradient primaryGradient = LinearGradient(

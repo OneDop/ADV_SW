@@ -1,7 +1,9 @@
 import 'package:advsw/navigator/app_router.dart';
 import 'package:advsw/theme/app_theme.dart';
+import 'package:advsw/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 void main() {
@@ -10,20 +12,29 @@ void main() {
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.dark,
   ));
-  runApp(const AdvSwApp());
+  runApp(
+    const ProviderScope(
+      child: AdvSwApp(),
+    ),
+  );
 }
 
-class AdvSwApp extends StatelessWidget {
+class AdvSwApp extends ConsumerWidget {
   const AdvSwApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final base = AppTheme.theme;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeProvider);
+    
     return MaterialApp.router(
       title: 'ProjectPal',
       debugShowCheckedModeBanner: false,
-      theme: base.copyWith(
-        textTheme: GoogleFonts.interTextTheme(base.textTheme),
+      themeMode: themeMode,
+      theme: AppTheme.lightTheme.copyWith(
+        textTheme: GoogleFonts.interTextTheme(AppTheme.lightTheme.textTheme),
+      ),
+      darkTheme: AppTheme.darkTheme.copyWith(
+        textTheme: GoogleFonts.interTextTheme(AppTheme.darkTheme.textTheme),
       ),
       routerConfig: router,
     );

@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:riverpod/riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:advsw/services/chat_service.dart';
 import 'package:advsw/models/message_model.dart';
 import 'package:advsw/services/message_service.dart';
@@ -25,15 +25,11 @@ final chatMessagesStreamProvider = StreamProvider.family<MessageResponse, int>((
 });
 
 /// AsyncNotifier to manage chat messages (History + Real-time)
-class ChatNotifier extends AsyncNotifier<List<MessageResponse>> {
-  final int projectId;
-
-  ChatNotifier(this.projectId);
-
+class ChatNotifier extends FamilyAsyncNotifier<List<MessageResponse>, int> {
   @override
-  FutureOr<List<MessageResponse>> build() async {
+  FutureOr<List<MessageResponse>> build(int arg) async {
     // Listen for new messages coming from the StreamProvider
-    ref.listen(chatMessagesStreamProvider(projectId), (previous, next) {
+    ref.listen(chatMessagesStreamProvider(arg), (previous, next) {
       next.whenData((message) {
         if (state.hasValue) {
           final currentMessages = state.value!;
@@ -46,7 +42,7 @@ class ChatNotifier extends AsyncNotifier<List<MessageResponse>> {
     });
 
     // Fetch initial history
-    return ref.watch(messageServiceProvider).getProjectHistory(projectId);
+    return ref.watch(messageServiceProvider).getProjectHistory(arg);
   }
 
   /// Action to send a message
@@ -56,12 +52,12 @@ class ChatNotifier extends AsyncNotifier<List<MessageResponse>> {
       fileUrl: fileUrl,
       fileName: fileName,
     );
-    // Use the projectId from the constructor
-    ref.read(chatServiceProvider).sendMessage(projectId, request);
+    // Use 'arg' as the projectId
+    ref.read(chatServiceProvider).sendMessage(arg, request);
   }
 }
 
 /// Main provider for the Chat UI
 final chatProvider = AsyncNotifierProvider.family<ChatNotifier, List<MessageResponse>, int>(
-  (projectId) => ChatNotifier(projectId),
+  ChatNotifier.new,
 );

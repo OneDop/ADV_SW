@@ -1,4 +1,4 @@
-import 'package:riverpod/riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:advsw/models/user_model.dart';
 import 'package:advsw/services/user_service.dart';
 

@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:riverpod/riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:advsw/models/rating_model.dart';
 import 'package:advsw/services/rating_service.dart';
 
@@ -9,14 +9,10 @@ final ratingServiceProvider = Provider<RatingService>((ref) {
 });
 
 /// AsyncNotifier to manage ratings for a specific user
-class UserRatingsNotifier extends AsyncNotifier<List<RatingResponse>> {
-  final int userId;
-
-  UserRatingsNotifier(this.userId);
-
+class UserRatingsNotifier extends FamilyAsyncNotifier<List<RatingResponse>, int> {
   @override
-  FutureOr<List<RatingResponse>> build() async {
-    return ref.watch(ratingServiceProvider).getRatingsForUser(userId);
+  FutureOr<List<RatingResponse>> build(int arg) async {
+    return ref.watch(ratingServiceProvider).getRatingsForUser(arg);
   }
 
   /// Submit a rating and update the local state
@@ -25,7 +21,7 @@ class UserRatingsNotifier extends AsyncNotifier<List<RatingResponse>> {
       final newRating = await ref.read(ratingServiceProvider).submitRating(request);
       final currentRatings = state.value ?? [];
       // If the rating is for the user this notifier is tracking, add it to the list
-      if (request.rateeId == userId) {
+      if (request.rateeId == arg) {
         return [...currentRatings, newRating];
       }
       return currentRatings;
@@ -35,11 +31,11 @@ class UserRatingsNotifier extends AsyncNotifier<List<RatingResponse>> {
   /// Refresh the ratings for this user from the server
   Future<void> refresh() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => ref.read(ratingServiceProvider).getRatingsForUser(userId));
+    state = await AsyncValue.guard(() => ref.read(ratingServiceProvider).getRatingsForUser(arg));
   }
 }
 
 /// Provider for ratings of a specific user (indexed by userId)
 final userRatingsProvider = AsyncNotifierProvider.family<UserRatingsNotifier, List<RatingResponse>, int>(
-  (userId) => UserRatingsNotifier(userId),
+  UserRatingsNotifier.new,
 );

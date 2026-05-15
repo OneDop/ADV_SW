@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:riverpod/riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:advsw/models/skill_model.dart';
 import 'package:advsw/models/user_model.dart';
 import 'package:advsw/services/skill_service.dart';
@@ -36,14 +36,10 @@ class AllSkillsNotifier extends AsyncNotifier<List<SkillResponse>> {
 final allSkillsProvider = AsyncNotifierProvider<AllSkillsNotifier, List<SkillResponse>>(AllSkillsNotifier.new);
 
 /// AsyncNotifier to manage skills for a specific user
-class UserSkillsNotifier extends AsyncNotifier<List<UserSkillResponse>> {
-  final int userId;
-
-  UserSkillsNotifier(this.userId);
-
+class UserSkillsNotifier extends FamilyAsyncNotifier<List<UserSkillResponse>, int> {
   @override
-  FutureOr<List<UserSkillResponse>> build() async {
-    return ref.watch(skillServiceProvider).getUserSkills(userId);
+  FutureOr<List<UserSkillResponse>> build(int arg) async {
+    return ref.watch(skillServiceProvider).getUserSkills(arg);
   }
 
   /// Add a skill to the user's profile and update local state
@@ -67,11 +63,11 @@ class UserSkillsNotifier extends AsyncNotifier<List<UserSkillResponse>> {
   /// Refresh the user's skills
   Future<void> refresh() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => ref.read(skillServiceProvider).getUserSkills(userId));
+    state = await AsyncValue.guard(() => ref.read(skillServiceProvider).getUserSkills(arg));
   }
 }
 
 /// Provider for skills of a specific user (indexed by userId)
 final userSkillsProvider = AsyncNotifierProvider.family<UserSkillsNotifier, List<UserSkillResponse>, int>(
-  (userId) => UserSkillsNotifier(userId),
+  UserSkillsNotifier.new,
 );

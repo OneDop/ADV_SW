@@ -2,30 +2,20 @@ class AuthenticationRequest {
   final String email;
   final String password;
 
-  AuthenticationRequest({
-    required this.email,
-    required this.password,
-  });
+  AuthenticationRequest({required this.email, required this.password});
 
   Map<String, dynamic> toJson() {
-    return {
-      'email': email,
-      'password': password,
-    };
+    return {'email': email, 'password': password};
   }
 }
 
 class AuthenticationResponse {
   final String token;
 
-  AuthenticationResponse({
-    required this.token,
-  });
+  AuthenticationResponse({required this.token});
 
   factory AuthenticationResponse.fromJson(Map<String, dynamic> json) {
-    return AuthenticationResponse(
-      token: json['token'],
-    );
+    return AuthenticationResponse(token: json['token']);
   }
 }
 
@@ -58,9 +48,7 @@ class ForgotPasswordRequest {
   ForgotPasswordRequest({required this.email});
 
   Map<String, dynamic> toJson() {
-    return {
-      'email': email,
-    };
+    return {'email': email};
   }
 }
 
@@ -68,15 +56,9 @@ class ResetPasswordRequest {
   final String token;
   final String newPassword;
 
-  ResetPasswordRequest({
-    required this.token,
-    required this.newPassword,
-  });
+  ResetPasswordRequest({required this.token, required this.newPassword});
 
   Map<String, dynamic> toJson() {
-    return {
-      'token': token,
-      'newPassword': newPassword,
-    };
+    return {'token': token, 'newPassword': newPassword};
   }
 }

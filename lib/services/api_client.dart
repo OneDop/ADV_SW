@@ -1,10 +1,11 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiClient {
   late Dio dio;
-  static const String tokenKey = 'auth_token'; // Made public
-  static const String _baseUrl = 'http://10.0.2.2:8080/api'; // Android Emulator local IP
+  static const String tokenKey = 'auth_token';
+  static const String _baseUrl = 'http://10.0.2.2:8080/api';
 
   ApiClient() {
     dio = Dio(BaseOptions(
@@ -61,6 +62,19 @@ class ApiClient {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(tokenKey);
+  }
+
+  // New method for profile image upload
+  Future<Response> uploadProfilePicture(File image) async {
+    try {
+      String fileName = image.path.split('/').last;
+      FormData formData = FormData.fromMap({
+        "file": await MultipartFile.fromFile(image.path, filename: fileName),
+      });
+      return await dio.post('/profile/upload-picture', data: formData);
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {

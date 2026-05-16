@@ -1,4 +1,4 @@
-import 'package:riverpod/riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:advsw/models/user_model.dart';
 import 'package:advsw/services/user_service.dart';
 
@@ -18,6 +18,12 @@ class UserProfileNotifier extends AsyncNotifier<UserProfileResponse> {
   Future<void> updateProfile(UpdateProfileRequest request) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => ref.read(userServiceProvider).updateProfile(request));
+  }
+
+  /// Update user's portfolio (Experience Level and Past Projects)
+  Future<void> updatePortfolio(UpdatePortfolioRequest request) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => ref.read(userServiceProvider).updatePortfolio(request));
   }
 
   /// Change the current user's password

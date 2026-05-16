@@ -1,5 +1,6 @@
 enum NotificationType {
   INVITATION,
+  JOIN_REQUEST,
   TASK_ASSIGNED,
   MESSAGE_RECEIVED,
   PROJECT_UPDATE,
@@ -13,6 +14,7 @@ class NotificationResponse {
   final String message;
   final int? projectId;
   final String? projectName;
+  final int? senderId;
   final DateTime createdAt;
 
   NotificationResponse({
@@ -22,6 +24,7 @@ class NotificationResponse {
     required this.message,
     this.projectId,
     this.projectName,
+    this.senderId,
     required this.createdAt,
   });
 
@@ -33,6 +36,7 @@ class NotificationResponse {
       message: json['message'],
       projectId: json['projectId'],
       projectName: json['projectName'],
+      senderId: json['senderId'],
       createdAt: DateTime.parse(json['createdAt']),
     );
   }

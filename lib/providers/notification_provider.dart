@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:riverpod/riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:advsw/models/notification_model.dart';
 import 'package:advsw/services/notification_service.dart';
 
@@ -19,6 +19,23 @@ class NotificationsNotifier extends AsyncNotifier<List<NotificationResponse>> {
   Future<void> refresh() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => ref.read(notificationServiceProvider).getNotificationsForUser());
+  }
+
+  /// Delete a specific notification
+  Future<void> deleteNotification(int id) async {
+    state = await AsyncValue.guard(() async {
+      await ref.read(notificationServiceProvider).deleteNotification(id);
+      final currentNotifications = state.value ?? [];
+      return currentNotifications.where((n) => n.id != id).toList();
+    });
+  }
+
+  /// Delete all notifications
+  Future<void> deleteAllNotifications() async {
+    state = await AsyncValue.guard(() async {
+      await ref.read(notificationServiceProvider).deleteAllNotifications();
+      return [];
+    });
   }
 }
 

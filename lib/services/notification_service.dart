@@ -14,4 +14,22 @@ class NotificationService {
       rethrow;
     }
   }
+
+  /// DELETE /api/notifications/{id}
+  Future<void> deleteNotification(int id) async {
+    try {
+      await _apiClient.delete('/notifications/$id');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// DELETE /api/notifications
+  Future<void> deleteAllNotifications() async {
+    try {
+      await _apiClient.delete('/notifications');
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

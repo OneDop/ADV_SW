@@ -25,7 +25,7 @@ class UserService {
     }
   }
 
-  /// PUT /api/users/me
+  /// PATCH /api/users/me
   Future<UserProfileResponse> updateProfile(UpdateProfileRequest request) async {
     try {
       final response = await _apiClient.patch('/users/me', data: request.toJson());
@@ -35,7 +35,17 @@ class UserService {
     }
   }
 
-  /// PUT /api/users/me/password
+  /// PATCH /api/users/me/portfolio
+  Future<UserProfileResponse> updatePortfolio(UpdatePortfolioRequest request) async {
+    try {
+      final response = await _apiClient.patch('/users/me/portfolio', data: request.toJson());
+      return UserProfileResponse.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// PATCH /api/users/me/password
   Future<void> changePassword(ChangePasswordRequest request) async {
     try {
       await _apiClient.patch('/users/me/password', data: request.toJson());

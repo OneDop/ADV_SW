@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:riverpod/riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:advsw/models/invitation_model.dart';
 import 'package:advsw/services/invitation_service.dart';
 
@@ -47,14 +47,10 @@ class UserInvitationsNotifier extends AsyncNotifier<List<InvitationResponse>> {
 final userInvitationsProvider = AsyncNotifierProvider<UserInvitationsNotifier, List<InvitationResponse>>(UserInvitationsNotifier.new);
 
 /// AsyncNotifier to manage pending join requests for a specific project
-class ProjectJoinRequestsNotifier extends AsyncNotifier<List<InvitationResponse>> {
-  final int projectId;
-
-  ProjectJoinRequestsNotifier(this.projectId);
-
+class ProjectJoinRequestsNotifier extends FamilyAsyncNotifier<List<InvitationResponse>, int> {
   @override
-  FutureOr<List<InvitationResponse>> build() async {
-    return ref.watch(invitationServiceProvider).getPendingJoinRequestsForProject(projectId);
+  FutureOr<List<InvitationResponse>> build(int arg) async {
+    return ref.watch(invitationServiceProvider).getPendingJoinRequestsForProject(arg);
   }
 
   /// Respond to a join request and update local state
@@ -72,19 +68,19 @@ class ProjectJoinRequestsNotifier extends AsyncNotifier<List<InvitationResponse>
   /// Send an invite to a user for this project
   Future<void> sendInvite(int receiverId) async {
     state = await AsyncValue.guard(() async {
-      await ref.read(invitationServiceProvider).sendInvite(projectId, receiverId);
-      return ref.read(invitationServiceProvider).getPendingJoinRequestsForProject(projectId);
+      await ref.read(invitationServiceProvider).sendInvite(arg, receiverId);
+      return ref.read(invitationServiceProvider).getPendingJoinRequestsForProject(arg);
     });
   }
 
   /// Refresh the join requests for this project
   Future<void> refresh() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => ref.read(invitationServiceProvider).getPendingJoinRequestsForProject(projectId));
+    state = await AsyncValue.guard(() => ref.read(invitationServiceProvider).getPendingJoinRequestsForProject(arg));
   }
 }
 
 /// Provider for pending join requests of a specific project
 final projectJoinRequestsProvider = AsyncNotifierProvider.family<ProjectJoinRequestsNotifier, List<InvitationResponse>, int>(
-  (projectId) => ProjectJoinRequestsNotifier(projectId),
+  ProjectJoinRequestsNotifier.new,
 );

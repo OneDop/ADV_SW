@@ -1,32 +1,83 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:advsw/theme/app_theme.dart';
-import 'package:advsw/data/seed_data.dart';
+import 'package:advsw/providers/project_provider.dart';
+import 'package:advsw/models/project_model.dart';
 import 'widgets.dart';
 
-class ProjectsListScreen extends StatefulWidget {
+class ProjectsListScreen extends ConsumerStatefulWidget {
   const ProjectsListScreen({super.key});
 
   @override
-  State<ProjectsListScreen> createState() => _ProjectsListScreenState();
+  ConsumerState<ProjectsListScreen> createState() => _ProjectsListScreenState();
 }
 
-class _ProjectsListScreenState extends State<ProjectsListScreen> {
+class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
   String _filter = 'all';
   String _query = '';
 
-  List<AppProject> get _filtered {
-    var list = SeedData.projects;
-    if (_filter == 'owned')     list = list.where((p) => p.ownerId == SeedData.currentUser.id).toList();
-    if (_filter == 'shared')    list = list.where((p) => p.ownerId != SeedData.currentUser.id).toList();
-    if (_filter == 'completed') list = list.where((p) => p.status == 'Completed').toList();
-    if (_query.isNotEmpty)      list = list.where((p) => p.name.toLowerCase().contains(_query.toLowerCase())).toList();
-    return list;
+  void _showCreateProjectSheet(BuildContext context, WidgetRef ref) {
+    final nameCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                const Text('New Project', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink900)),
+                GestureDetector(onTap: () => Navigator.pop(context),
+                  child: const Icon(Icons.close_rounded, color: AppColors.ink500)),
+              ]),
+              const SizedBox(height: 20),
+              _SheetField(label: 'PROJECT NAME', hint: 'e.g. SkillSync App', controller: nameCtrl),
+              const SizedBox(height: 14),
+              _SheetField(label: 'DESCRIPTION', hint: 'What is this project about?', controller: descCtrl, maxLines: 3),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final name = nameCtrl.text.trim();
+                    final desc = descCtrl.text.trim();
+                    if (name.isEmpty) return;
+                    Navigator.pop(context);
+                    await ref.read(myProjectsProvider.notifier).createProject(
+                      CreateProjectRequest(name: name, description: desc),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.teal700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    elevation: 0,
+                  ),
+                  child: const Text('Create Project', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final projects = _filtered;
+    final projectsAsync = ref.watch(myProjectsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -44,13 +95,17 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text('Projects', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.ink900, letterSpacing: -0.4)),
-                        Text('${SeedData.projects.length} total', style: const TextStyle(fontSize: 11, color: AppColors.ink500)),
+                        projectsAsync.when(
+                          data: (list) => Text('${list.length} total', style: const TextStyle(fontSize: 11, color: AppColors.ink500)),
+                          loading: () => const Text('Loading...', style: TextStyle(fontSize: 11, color: AppColors.ink500)),
+                          error: (_, __) => const Text('Error', style: TextStyle(fontSize: 11, color: AppColors.ink500)),
+                        ),
                       ],
                     ),
                   ),
                   _IconBtn(icon: Icons.filter_list_rounded, onTap: () {}),
                   const SizedBox(width: 8),
-                  _FilledIconBtn(icon: Icons.add_rounded, onTap: () {}),
+                  _FilledIconBtn(icon: Icons.add_rounded, onTap: () => _showCreateProjectSheet(context, ref)),
                 ],
               ),
             ),
@@ -73,7 +128,6 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
                 children: [
                   _FilterChip(label: 'All',           id: 'all',       current: _filter, onTap: (v) => setState(() => _filter = v)),
                   _FilterChip(label: 'Owned',         id: 'owned',     current: _filter, onTap: (v) => setState(() => _filter = v)),
-                  _FilterChip(label: 'Shared with me',id: 'shared',    current: _filter, onTap: (v) => setState(() => _filter = v)),
                   _FilterChip(label: 'Completed',     id: 'completed', current: _filter, onTap: (v) => setState(() => _filter = v)),
                 ],
               ),
@@ -81,17 +135,34 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
 
             // ── List ──────────────────────────────────────────────────────────
             Expanded(
-              child: projects.isEmpty
-                  ? _EmptyState()
-                  : ListView.builder(
+              child: projectsAsync.when(
+                data: (projects) {
+                  var filtered = projects;
+                  // Note: In a real app, filtering might be done via a provider or backend
+                  if (_filter == 'completed') filtered = filtered.where((p) => p.status == ProjectStatus.COMPLETED).toList();
+                  if (_query.isNotEmpty) filtered = filtered.where((p) => p.name.toLowerCase().contains(_query.toLowerCase())).toList();
+
+                  if (filtered.isEmpty) return _EmptyState();
+
+                  return RefreshIndicator(
+                    onRefresh: () => ref.read(myProjectsProvider.notifier).refresh(),
+                    child: ListView.builder(
                       padding: const EdgeInsets.fromLTRB(20, 8, 20, 110),
-                      itemCount: projects.length,
-                      itemBuilder: (_, i) => ProjectCard(
-                        project: projects[i],
-                        wide: true,
-                        onTap: () => context.push('/project/${projects[i].id}'),
-                      ),
+                      itemCount: filtered.length,
+                      itemBuilder: (_, i) {
+                        final p = filtered[i];
+                        return ProjectCardProxy(
+                          project: p,
+                          wide: true,
+                          onTap: () => context.push('/project/${p.id}'),
+                        );
+                      },
                     ),
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, stack) => Center(child: Text('Error: $err')),
+              ),
             ),
           ],
         ),
@@ -100,8 +171,28 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
   }
 }
 
-// ── Local widgets ─────────────────────────────────────────────────────────────
+/// A proxy widget to bridge ProjectResponse to the existing ProjectCard UI
+class ProjectCardProxy extends StatelessWidget {
+  final ProjectResponse project;
+  final bool wide;
+  final VoidCallback? onTap;
 
+  const ProjectCardProxy({super.key, required this.project, this.wide = false, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    // Map ProjectResponse to AppProject (from SeedData for UI compatibility)
+    // or just pass the data directly if we update ProjectCard.
+    // For now, let's keep the UI consistent with a mapping or updated card.
+    return ProjectCard(
+      project: project, // I will update ProjectCard to handle ProjectResponse
+      wide: wide,
+      onTap: onTap,
+    );
+  }
+}
+
+// ── Local widgets (Keep existing local widgets) ──────────────────────────────────
 class _IconBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
@@ -202,6 +293,42 @@ class _FilterChip extends StatelessWidget {
         child: Text(label,
           style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: sel ? Colors.white : AppColors.ink700)),
       ),
+    );
+  }
+}
+
+class _SheetField extends StatelessWidget {
+  final String label;
+  final String hint;
+  final TextEditingController controller;
+  final int maxLines;
+  const _SheetField({required this.label, required this.hint, required this.controller, this.maxLines = 1});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: AppColors.ink500)),
+        const SizedBox(height: 6),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.bgAlt, borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.line),
+          ),
+          child: TextField(
+            controller: controller,
+            maxLines: maxLines,
+            style: const TextStyle(fontSize: 14, color: AppColors.ink900),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: const TextStyle(color: AppColors.ink400, fontSize: 14),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

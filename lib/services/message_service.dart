@@ -27,4 +27,13 @@ class MessageService {
       rethrow;
     }
   }
+
+  /// DELETE /api/messages/{messageId}
+  Future<void> deleteMessage(int messageId) async {
+    try {
+      await _apiClient.delete('/messages/$messageId');
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

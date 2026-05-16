@@ -49,26 +49,29 @@ class CreateProjectRequest {
 }
 
 class ProjectMemberResponse {
-  final int id;
-  final int projectId;
   final int userId;
-  final String userName;
+  final String email;
+  final String firstName;
+  final String lastName;
+  final String? profilePictureUrl;
   final MemberRole memberRole;
 
   ProjectMemberResponse({
-    required this.id,
-    required this.projectId,
     required this.userId,
-    required this.userName,
+    required this.email,
+    required this.firstName,
+    required this.lastName,
+    this.profilePictureUrl,
     required this.memberRole,
   });
 
   factory ProjectMemberResponse.fromJson(Map<String, dynamic> json) {
     return ProjectMemberResponse(
-      id: json['id'],
-      projectId: json['projectId'],
       userId: json['userId'],
-      userName: json['userName'],
+      email: json['email'],
+      firstName: json['firstName'],
+      lastName: json['lastName'],
+      profilePictureUrl: json['profilePictureUrl'],
       memberRole: MemberRole.values.byName(json['memberRole']),
     );
   }

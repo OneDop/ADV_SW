@@ -59,26 +59,6 @@ class UserSummaryResponse {
   }
 }
 
-class ChangePasswordRequest {
-  final String oldPassword;
-  final String newPassword;
-  final String confirmNewPassword;
-
-  ChangePasswordRequest({
-    required this.oldPassword,
-    required this.newPassword,
-    required this.confirmNewPassword,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'oldPassword': oldPassword,
-      'newPassword': newPassword,
-      'confirmNewPassword': confirmNewPassword,
-    };
-  }
-}
-
 class UpdateProfileRequest {
   final String firstName;
   final String lastName;
@@ -105,26 +85,51 @@ class UpdateProfileRequest {
   }
 }
 
+class UpdatePortfolioRequest {
+  final ExperienceLevel experienceLevel;
+  final List<Map<String, dynamic>> pastProjects;
+
+  UpdatePortfolioRequest({
+    required this.experienceLevel,
+    required this.pastProjects,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'experienceLevel': experienceLevel.name,
+      'pastProjects': pastProjects,
+    };
+  }
+}
+
 class PastProjectResponse {
-  final int id;
+  final int? id;
   final String name;
-  final String status;
-  final String role;
+  final String description;
+  final String? projectLink;
 
   PastProjectResponse({
-    required this.id,
+    this.id,
     required this.name,
-    required this.status,
-    required this.role,
+    required this.description,
+    this.projectLink,
   });
 
   factory PastProjectResponse.fromJson(Map<String, dynamic> json) {
     return PastProjectResponse(
       id: json['id'],
-      name: json['name'],
-      status: json['status'],
-      role: json['role'],
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      projectLink: json['projectLink'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'description': description,
+      'projectLink': projectLink,
+    };
   }
 }
 
@@ -135,7 +140,7 @@ class UserProfileResponse {
   final String lastName;
   final String bio;
   final String? profilePictureUrl;
-  final bool isActive;
+  final ExperienceLevel? experienceLevel;
   final Role role;
   final AvailabilityStatus availabilityStatus;
   final List<UserSkillResponse> skills;
@@ -149,7 +154,7 @@ class UserProfileResponse {
     required this.lastName,
     required this.bio,
     this.profilePictureUrl,
-    required this.isActive,
+    this.experienceLevel,
     required this.role,
     required this.availabilityStatus,
     required this.skills,
@@ -165,7 +170,9 @@ class UserProfileResponse {
       lastName: json['lastName'],
       bio: json['bio'] ?? '',
       profilePictureUrl: json['profilePictureUrl'],
-      isActive: json['isActive'] ?? true,
+      experienceLevel: json['experienceLevel'] != null 
+          ? ExperienceLevel.values.byName(json['experienceLevel']) 
+          : null,
       role: Role.values.byName(json['role']),
       availabilityStatus: AvailabilityStatus.values.byName(json['availabilityStatus'] ?? 'AVAILABLE'),
       skills: (json['skills'] as List? ?? [])
@@ -202,5 +209,25 @@ class UserSkillResponse {
       skillName: json['skillName'],
       experienceLevel: ExperienceLevel.values.byName(json['experienceLevel']),
     );
+  }
+}
+
+class ChangePasswordRequest {
+  final String oldPassword;
+  final String newPassword;
+  final String confirmNewPassword;
+
+  ChangePasswordRequest({
+    required this.oldPassword,
+    required this.newPassword,
+    required this.confirmNewPassword,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'oldPassword': oldPassword,
+      'newPassword': newPassword,
+      'confirmNewPassword': confirmNewPassword,
+    };
   }
 }

@@ -28,12 +28,13 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Navigation items mapping exactly to app_router.dart StatefulShellBranch indices
     const items = [
       (Icons.home_rounded,          Icons.home_outlined,          'Home'),
-      (Icons.search_rounded,        Icons.search_rounded,         'Discover'),
-      (Icons.grid_view_rounded,     Icons.grid_view_outlined,     'Projects'),
+      (Icons.explore_rounded,       Icons.explore_outlined,       'Discover'),
+      (Icons.search_rounded,        Icons.search_outlined,        'Search'),
       (Icons.person_rounded,        Icons.person_outline_rounded, 'Profile'),
-      (Icons.notifications_rounded, Icons.notifications_none_rounded, 'Updates'),
+      (Icons.notifications_rounded, Icons.notifications_none_rounded, 'Inbox'),
     ];
 
     return Container(

@@ -1,42 +1,26 @@
+import 'package:advsw/models/search_model.dart';
+import 'package:advsw/providers/search_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:advsw/theme/app_theme.dart';
-import 'package:advsw/data/seed_data.dart';
 import 'package:advsw/screens/home/widgets.dart';
 
-class DiscoverScreen extends StatefulWidget {
+class DiscoverScreen extends ConsumerStatefulWidget {
   const DiscoverScreen({super.key});
 
   @override
-  State<DiscoverScreen> createState() => _DiscoverScreenState();
+  ConsumerState<DiscoverScreen> createState() => _DiscoverScreenState();
 }
 
-class _DiscoverScreenState extends State<DiscoverScreen> {
+class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
   String _tab = 'people';
   String _query = '';
-  final List<String> _activeSkills = [];
-
-  static const _allSkills = ['Flutter', 'Spring Boot', 'React', 'Figma', 'UX', 'PostgreSQL', 'TypeScript'];
-
-  static const _discoverProjects = [
-    _DiscoverProject(name: 'Open Tutor',    desc: 'AI tutoring co-op — looking for Flutter devs.', members: 4, skills: ['Flutter', 'Spring Boot']),
-    _DiscoverProject(name: 'Local Greens',  desc: 'Marketplace for local farms.',                  members: 6, skills: ['React', 'UX']),
-    _DiscoverProject(name: 'Field Notes',   desc: 'Note-taking app with offline-first sync.',      members: 2, skills: ['Flutter', 'TypeScript']),
-  ];
-
-  List<DiscoverUser> get _filteredUsers {
-    var list = SeedData.discoverUsers;
-    if (_query.isNotEmpty) list = list.where((u) => u.name.toLowerCase().contains(_query.toLowerCase())).toList();
-    if (_activeSkills.isNotEmpty) list = list.where((u) => _activeSkills.any((s) => u.skills.contains(s))).toList();
-    return list;
-  }
-
-  List<_DiscoverProject> get _filteredProjects {
-    if (_query.isEmpty) return _discoverProjects;
-    return _discoverProjects.where((p) => p.name.toLowerCase().contains(_query.toLowerCase())).toList();
-  }
 
   @override
   Widget build(BuildContext context) {
+    final userSearchAsync = ref.watch(userSearchProvider);
+    final projectSearchAsync = ref.watch(projectSearchProvider);
+
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
@@ -58,7 +42,17 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             // Search bar
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-              child: _SearchBar(value: _query, onChanged: (v) => setState(() => _query = v)),
+              child: _SearchBar(
+                value: _query, 
+                onChanged: (v) {
+                  setState(() => _query = v);
+                  if (_tab == 'people') {
+                    ref.read(userSearchProvider.notifier).search(name: v);
+                  } else {
+                    ref.read(projectSearchProvider.notifier).searchProjects(name: v);
+                  }
+                }
+              ),
             ),
 
             // Tab toggle
@@ -67,51 +61,48 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               child: _SegmentedToggle(
                 value: _tab,
                 options: const [('people', 'People'), ('projects', 'Projects')],
-                onChange: (v) => setState(() => _tab = v),
+                onChange: (v) {
+                  setState(() => _tab = v);
+                  if (v == 'people') {
+                    ref.read(userSearchProvider.notifier).search(name: _query);
+                  } else {
+                    ref.read(projectSearchProvider.notifier).searchProjects(name: _query);
+                  }
+                },
               ),
             ),
 
-            // Skill filters (people tab only)
-            if (_tab == 'people')
-              SizedBox(
-                height: 44,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                  children: _allSkills.map((s) {
-                    final sel = _activeSkills.contains(s);
-                    return _FilterChip(
-                      label: s, selected: sel,
-                      onTap: () => setState(() {
-                        if (sel) { _activeSkills.remove(s); } else { _activeSkills.add(s); }
-                      }),
-                    );
-                  }).toList(),
-                ),
-              ),
-
             // Content
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 110),
-                children: _tab == 'people'
-                    ? _filteredUsers.map((u) => _UserCard(user: u)).toList()
-                    : _filteredProjects.map((p) => _ProjectDiscoverCard(project: p)).toList(),
-              ),
+              child: _tab == 'people' 
+                ? userSearchAsync.when(
+                    data: (users) => users.isEmpty 
+                      ? const Center(child: Text('No users found'))
+                      : ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(20, 12, 20, 110),
+                          itemCount: users.length,
+                          itemBuilder: (_, i) => _UserCard(user: users[i]),
+                        ),
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (err, _) => Center(child: Text('Error: $err')),
+                  )
+                : projectSearchAsync.when(
+                    data: (projects) => projects.isEmpty
+                      ? const Center(child: Text('No projects found'))
+                      : ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(20, 12, 20, 110),
+                          itemCount: projects.length,
+                          itemBuilder: (_, i) => _ProjectDiscoverCard(project: projects[i]),
+                        ),
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (err, _) => Center(child: Text('Error: $err')),
+                  ),
             ),
           ],
         ),
       ),
     );
   }
-}
-
-// ── Data model ─────────────────────────────────────────────────────────────────
-class _DiscoverProject {
-  final String name, desc;
-  final int members;
-  final List<String> skills;
-  const _DiscoverProject({required this.name, required this.desc, required this.members, required this.skills});
 }
 
 // ── Local widgets ──────────────────────────────────────────────────────────────
@@ -179,36 +170,8 @@ class _SegmentedToggle extends StatelessWidget {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _FilterChip({required this.label, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        margin: const EdgeInsets.only(right: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.teal700 : Colors.white,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: selected ? AppColors.teal700 : AppColors.line),
-        ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          if (selected) ...[const Icon(Icons.check_rounded, size: 12, color: Colors.white), const SizedBox(width: 4)],
-          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: selected ? Colors.white : AppColors.ink700)),
-        ]),
-      ),
-    );
-  }
-}
-
 class _UserCard extends StatelessWidget {
-  final DiscoverUser user;
+  final SearchUserResult user;
   const _UserCard({required this.user});
 
   @override
@@ -224,20 +187,20 @@ class _UserCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            UserAvatar(name: user.name, size: 44, status: user.status),
+            UserAvatar(name: '${user.firstName} ${user.lastName}', size: 44, status: 'online', imageUrl: user.profilePictureUrl),
             const SizedBox(width: 12),
             Expanded(child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(user.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.ink900)),
-                Text(user.role, style: const TextStyle(fontSize: 11, color: AppColors.ink500)),
+                Text('${user.firstName} ${user.lastName}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.ink900)),
+                Text(user.email, style: const TextStyle(fontSize: 11, color: AppColors.ink500)),
               ],
             )),
             _InviteBtn(onTap: () {}),
           ]),
           const SizedBox(height: 12),
           Wrap(spacing: 5, runSpacing: 6,
-            children: user.skills.map((s) => _SkillTag(s)).toList()),
+            children: user.skills.map((s) => _SkillTag(s.skillName)).toList()),
         ],
       ),
     );
@@ -280,7 +243,7 @@ class _SkillTag extends StatelessWidget {
 }
 
 class _ProjectDiscoverCard extends StatelessWidget {
-  final _DiscoverProject project;
+  final SearchProjectResult project;
   const _ProjectDiscoverCard({required this.project});
 
   @override
@@ -298,19 +261,18 @@ class _ProjectDiscoverCard extends StatelessWidget {
           children: [
             Text(project.name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink900)),
             const SizedBox(height: 4),
-            Text(project.desc, style: const TextStyle(fontSize: 12, color: AppColors.ink500)),
+            Text(project.description, style: const TextStyle(fontSize: 12, color: AppColors.ink500)),
             const SizedBox(height: 10),
-            Wrap(spacing: 5, runSpacing: 6,
-              children: project.skills.map((s) => Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: AppColors.teal50, borderRadius: BorderRadius.circular(999), border: Border.all(color: AppColors.teal100)),
-                child: Text(s, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.teal700)),
-              )).toList()),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(color: AppColors.teal50, borderRadius: BorderRadius.circular(999), border: Border.all(color: AppColors.teal100)),
+              child: Text(project.status, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.teal700)),
+            ),
           ],
         )),
         const SizedBox(width: 12),
         Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Text('${project.members} members', style: const TextStyle(fontSize: 10, color: AppColors.ink500)),
+          const Text('Open project', style: TextStyle(fontSize: 10, color: AppColors.ink500)),
           const SizedBox(height: 8),
           GestureDetector(
             onTap: () {},

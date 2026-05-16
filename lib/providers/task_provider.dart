@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:riverpod/riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:advsw/models/task_model.dart';
 import 'package:advsw/services/task_service.dart';
 
@@ -9,20 +9,16 @@ final taskServiceProvider = Provider<TaskService>((ref) {
 });
 
 /// AsyncNotifier to manage tasks for a specific project
-class ProjectTasksNotifier extends AsyncNotifier<List<TaskResponse>> {
-  final int projectId;
-
-  ProjectTasksNotifier(this.projectId);
-
+class ProjectTasksNotifier extends FamilyAsyncNotifier<List<TaskResponse>, int> {
   @override
-  FutureOr<List<TaskResponse>> build() async {
-    return ref.watch(taskServiceProvider).getTasksByProject(projectId);
+  FutureOr<List<TaskResponse>> build(int arg) async {
+    return ref.watch(taskServiceProvider).getTasksByProject(arg);
   }
 
   /// Create a new task and add it to the local state
   Future<void> createTask(CreateTaskRequest request) async {
     state = await AsyncValue.guard(() async {
-      final newTask = await ref.read(taskServiceProvider).createTask(projectId, request);
+      final newTask = await ref.read(taskServiceProvider).createTask(arg, request);
       final currentTasks = state.value ?? [];
       return [...currentTasks, newTask];
     });
@@ -67,11 +63,11 @@ class ProjectTasksNotifier extends AsyncNotifier<List<TaskResponse>> {
   /// Refresh the task list for this project from the server
   Future<void> refresh() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => ref.read(taskServiceProvider).getTasksByProject(projectId));
+    state = await AsyncValue.guard(() => ref.read(taskServiceProvider).getTasksByProject(arg));
   }
 }
 
 /// Provider for tasks of a specific project (indexed by projectId)
 final projectTasksProvider = AsyncNotifierProvider.family<ProjectTasksNotifier, List<TaskResponse>, int>(
-  (projectId) => ProjectTasksNotifier(projectId),
+  ProjectTasksNotifier.new,
 );

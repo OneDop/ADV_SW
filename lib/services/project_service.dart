@@ -64,4 +64,38 @@ class ProjectService {
       rethrow;
     }
   }
+
+  /// GET /api/projects/{id}/members
+  Future<List<ProjectMemberResponse>> getProjectMembers(int id) async {
+    try {
+      final response = await _apiClient.get('/projects/$id/members');
+      final List<dynamic> data = response.data;
+      return data.map((json) => ProjectMemberResponse.fromJson(json)).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// PATCH /api/projects/{projectId}/members/{userId}/role
+  Future<List<ProjectMemberResponse>> updateMemberRole(
+      int projectId, int userId, UpdateMemberRoleRequest request) async {
+    try {
+      final response = await _apiClient.patch(
+          '/projects/$projectId/members/$userId/role',
+          data: request.toJson());
+      final List<dynamic> data = response.data;
+      return data.map((json) => ProjectMemberResponse.fromJson(json)).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// DELETE /api/projects/{projectId}/members/{userId}
+  Future<void> removeMember(int projectId, int userId) async {
+    try {
+      await _apiClient.delete('/projects/$projectId/members/$userId');
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

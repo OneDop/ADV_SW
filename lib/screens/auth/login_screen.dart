@@ -86,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: AppColors.ink500),
                           ),
                           TextButton(
-                            onPressed: () {},
+                            onPressed: () => context.push('/forgot-password'),
                             style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                             child: const Text('Forgot?', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.teal700)),
                           ),
@@ -146,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      Row(
+                      Row(// nothing
                         children: [
                           Expanded(child: SocialBtn(label: 'Google', icon: Icons.g_mobiledata_rounded, onPressed: () => context.go('/home'))),
                           const SizedBox(width: 10),

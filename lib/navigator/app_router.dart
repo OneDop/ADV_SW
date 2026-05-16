@@ -1,6 +1,13 @@
-import 'package:advsw/screens/discover/discover_screen.dart';
+import 'package:advsw/features/admin/admin_screen.dart';
+import 'package:advsw/features/discovery/project_discovery_screen.dart';
+import 'package:advsw/features/notifications/notification_screen.dart';
+import 'package:advsw/features/profile_management/edit_profile_screen.dart';
+import 'package:advsw/features/profile_management/portfolio_update_screen.dart';
+import 'package:advsw/features/project_management/project_members_screen.dart';
+import 'package:advsw/features/project_management/member_management_screen.dart';
+import 'package:advsw/features/search/global_search_screen.dart';
+import 'package:advsw/screens/auth/forgot_password_screen.dart';
 import 'package:advsw/screens/myprojects/projects_list.dart';
-import 'package:advsw/screens/mynotifications/notifications_screen.dart';
 import 'package:advsw/screens/projectInfo/project_info.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -22,10 +29,40 @@ final router = GoRouter(
       builder: (context, state) => const SignupScreen(),
     ),
     GoRoute(
+      path: '/forgot-password',
+      builder: (context, state) => const ForgotPasswordScreen(),
+    ),
+    GoRoute(
+      path: '/admin',
+      builder: (context, state) => const AdminScreen(),
+    ),
+    GoRoute(
+      path: '/edit-profile',
+      builder: (context, state) => const EditProfileScreen(),
+    ),
+    GoRoute(
+      path: '/portfolio-update',
+      name: 'portfolio-update',
+      builder: (context, state) => const PortfolioUpdateScreen(),
+    ),
+    GoRoute(
+      path: '/my-projects',
+      name: 'my-projects',
+      builder: (context, state) => const ProjectsListScreen(),
+    ),
+    GoRoute(
       path: '/project/:id',
       builder: (context, state) {
-        final projectId = state.pathParameters['id'] ?? 'p1';
+        final projectId = state.pathParameters['id'] ?? '1';
         return ProjectInfoScreen(projectId: projectId);
+      },
+    ),
+    GoRoute(
+      path: '/project/:id/manage-members',
+      name: 'member-management',
+      builder: (context, state) {
+        final projectId = int.tryParse(state.pathParameters['id'] ?? '0') ?? 0;
+        return MemberManagementScreen(projectId: projectId);
       },
     ),
     StatefulShellRoute.indexedStack(
@@ -36,21 +73,21 @@ final router = GoRouter(
         StatefulShellBranch(routes: [
           GoRoute(path: '/home', builder: (c, s) => const HomeScreen()),
         ]),
-        // 1: Discover
+        // 1: Discover (Browse Projects - FR33, FR34)
         StatefulShellBranch(routes: [
-          GoRoute(path: '/discover', builder: (c, s) => const DiscoverScreen()),
+          GoRoute(path: '/discover', name: 'discover', builder: (c, s) => const ProjectDiscoveryScreen()),
         ]),
-        // 2: Projects
+        // 2: Search (Find Talent - FR31, FR32)
         StatefulShellBranch(routes: [
-          GoRoute(path: '/projects', builder: (c, s) => const ProjectsListScreen()),
+          GoRoute(path: '/search', name: 'search', builder: (c, s) => const GlobalSearchScreen()),
         ]),
-        // 3: Profile
+        // 3: Profile (Portfolio - FR11, FR12)
         StatefulShellBranch(routes: [
           GoRoute(path: '/profile', builder: (c, s) => const ProfileScreen()),
         ]),
-        // 4: Notifications
+        // 4: Inbox (Notifications - FR23, FR40)
         StatefulShellBranch(routes: [
-          GoRoute(path: '/notifications', builder: (c, s) => const NotificationsScreen()),
+          GoRoute(path: '/notifications', builder: (c, s) => const NotificationScreen()),
         ]),
       ],
     ),

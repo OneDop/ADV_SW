@@ -6,6 +6,7 @@ import 'package:advsw/providers/search_provider.dart';
 import 'package:advsw/providers/skill_provider.dart';
 import 'package:advsw/models/search_model.dart';
 import 'package:advsw/screens/home/widgets.dart';
+import 'package:advsw/screens/user_profile/user_profile_screen.dart'; // Assuming this path for UserProfileScreen
 
 class SearchUsersScreen extends ConsumerStatefulWidget {
   const SearchUsersScreen({super.key});
@@ -165,50 +166,60 @@ class _UserSearchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.lineSoft),
-        boxShadow: AppTheme.shadowSm,
-      ),
-      child: Row(
-        children: [
-          UserAvatar(
-            name: '${user.firstName} ${user.lastName}',
-            imageUrl: user.profilePictureUrl,
-            size: 52,
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => UserProfileScreen(userId: user.id),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('${user.firstName} ${user.lastName}', 
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: AppColors.ink900, fontSize: 15)),
-                Text(user.email, 
-                  style: GoogleFonts.inter(fontSize: 12, color: AppColors.ink500)),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 4,
-                  runSpacing: 4,
-                  children: user.skills.take(3).map((s) => Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.teal50,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(s.skillName, 
-                      style: GoogleFonts.inter(fontSize: 10, color: AppColors.teal700, fontWeight: FontWeight.w600)),
-                  )).toList(),
-                ),
-              ],
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.lineSoft),
+          boxShadow: AppTheme.shadowSm,
+        ),
+        child: Row(
+          children: [
+            UserAvatar(
+              name: '${user.firstName} ${user.lastName}',
+              imageUrl: user.profilePictureUrl,
+              size: 52,
             ),
-          ),
-          const Icon(Icons.chevron_right, color: AppColors.ink300),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${user.firstName} ${user.lastName}', 
+                    style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: AppColors.ink900, fontSize: 15)),
+                  Text(user.email, 
+                    style: GoogleFonts.inter(fontSize: 12, color: AppColors.ink500)),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: user.skills.take(3).map((s) => Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.teal50,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(s.skillName, 
+                        style: GoogleFonts.inter(fontSize: 10, color: AppColors.teal700, fontWeight: FontWeight.w600)),
+                    )).toList(),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: AppColors.ink300),
+          ],
+        ),
       ),
     );
   }

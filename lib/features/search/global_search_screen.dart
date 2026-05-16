@@ -5,6 +5,7 @@ import 'package:advsw/theme/app_theme.dart';
 import 'package:advsw/providers/search_provider.dart';
 import 'package:advsw/providers/skill_provider.dart';
 import 'package:advsw/screens/home/widgets.dart';
+import 'package:advsw/screens/user_profile/user_profile_screen.dart';
 
 class GlobalSearchScreen extends ConsumerStatefulWidget {
   const GlobalSearchScreen({super.key});
@@ -98,23 +99,33 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                 itemCount: users.length,
                 itemBuilder: (context, index) {
                   final user = users[index];
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white, borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.lineSoft), boxShadow: AppTheme.shadowSm,
-                    ),
-                    child: Row(
-                      children: [
-                        UserAvatar(name: '${user.firstName} ${user.lastName}', imageUrl: user.profilePictureUrl, size: 48),
-                        const SizedBox(width: 12),
-                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text('${user.firstName} ${user.lastName}', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: AppColors.ink900)),
-                          Text(user.email, style: GoogleFonts.inter(fontSize: 12, color: AppColors.ink500)),
-                        ])),
-                        const Icon(Icons.chevron_right, color: AppColors.ink300),
-                      ],
+                  return InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => UserProfileScreen(userId: user.id),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white, borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.lineSoft), boxShadow: AppTheme.shadowSm,
+                      ),
+                      child: Row(
+                        children: [
+                          UserAvatar(name: '${user.firstName} ${user.lastName}', imageUrl: user.profilePictureUrl, size: 48),
+                          const SizedBox(width: 12),
+                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text('${user.firstName} ${user.lastName}', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: AppColors.ink900)),
+                            Text(user.email, style: GoogleFonts.inter(fontSize: 12, color: AppColors.ink500)),
+                          ])),
+                          const Icon(Icons.chevron_right, color: AppColors.ink300),
+                        ],
+                      ),
                     ),
                   );
                 },

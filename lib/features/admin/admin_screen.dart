@@ -454,7 +454,10 @@ class _SkillsTabState extends ConsumerState<_SkillsTab> {
     return Column(children: [
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-        child: Row(children: [
+        child: AnimatedPadding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          duration: const Duration(milliseconds: 200),
+          child: Row(children: [
           Expanded(
             child: Container(
               height: 48,
@@ -488,7 +491,8 @@ class _SkillsTabState extends ConsumerState<_SkillsTab> {
               child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
             ),
           ),
-        ]),
+          ]),
+        ),
       ),
       const SizedBox(height: 12),
       Expanded(

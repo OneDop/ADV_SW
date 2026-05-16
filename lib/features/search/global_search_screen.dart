@@ -39,10 +39,13 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
       ),
       body: Column(
         children: [
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Column(
+          AnimatedPadding(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+            duration: const Duration(milliseconds: 200),
+            child: Container(
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 TextField(
@@ -91,6 +94,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                 ),
               ],
             ),
+          ),
           ),
           Expanded(
             child: searchResults.when(

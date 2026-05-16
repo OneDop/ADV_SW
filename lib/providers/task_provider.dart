@@ -16,12 +16,14 @@ class ProjectTasksNotifier extends FamilyAsyncNotifier<List<TaskResponse>, int> 
   }
 
   /// Create a new task and add it to the local state
-  Future<void> createTask(CreateTaskRequest request) async {
+  Future<TaskResponse?> createTask(CreateTaskRequest request) async {
+    TaskResponse? newTask;
     state = await AsyncValue.guard(() async {
-      final newTask = await ref.read(taskServiceProvider).createTask(arg, request);
+      newTask = await ref.read(taskServiceProvider).createTask(arg, request);
       final currentTasks = state.value ?? [];
-      return [...currentTasks, newTask];
+      return [...currentTasks, newTask!];
     });
+    return newTask;
   }
 
   /// Update an existing task and update the local state

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:advsw/models/project_model.dart';
 import 'package:advsw/models/task_model.dart';
 import 'package:advsw/providers/chat_provider.dart';
@@ -5,6 +6,7 @@ import 'package:advsw/providers/invitation_provider.dart';
 import 'package:advsw/providers/project_provider.dart';
 import 'package:advsw/providers/task_provider.dart';
 import 'package:advsw/providers/user_provider.dart';
+import 'package:advsw/services/api_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -46,7 +48,6 @@ class _ProjectInfoScreenState extends ConsumerState<ProjectInfoScreen> with Sing
       body: SafeArea(
         child: projectAsync.when(
           data: (project) => Column(children: [
-            // ── Header ────────────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
               child: Row(children: [
@@ -75,7 +76,6 @@ class _ProjectInfoScreenState extends ConsumerState<ProjectInfoScreen> with Sing
               ]),
             ),
 
-            // ── Tab bar ───────────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
               child: TabBar(
@@ -96,7 +96,6 @@ class _ProjectInfoScreenState extends ConsumerState<ProjectInfoScreen> with Sing
               ),
             ),
 
-            // ── Content ───────────────────────────────────────────────────────
             Expanded(
               child: TabBarView(
                 controller: _tabCtrl,
@@ -203,18 +202,6 @@ class _OverviewTab extends ConsumerWidget {
             ]),
           )),
         ]),
-
-        const SectionHeader(title: 'Quick actions'),
-        GridView.count(
-          crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10,
-          childAspectRatio: 3.5, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-          children: [
-            _QuickAction(icon: Icons.add_task_rounded, label: 'Add task', onTap: () {}),
-            _QuickAction(icon: Icons.person_add_alt_1_rounded, label: 'Invite', onTap: () {}),
-            _QuickAction(icon: Icons.forum_outlined, label: 'Open chat', onTap: () {}),
-            _QuickAction(icon: Icons.edit_outlined, label: 'Edit info', onTap: () {}),
-          ],
-        ),
       ],
     );
   }
@@ -231,11 +218,32 @@ class _TasksTab extends ConsumerStatefulWidget {
 
 class _TasksTabState extends ConsumerState<_TasksTab> {
   String _view = 'board';
+  int? _selectedAssigneeId;
+  Timer? _refreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (mounted) {
+        ref.read(projectTasksProvider(widget.projectId).notifier).refresh();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
 
   void _showCreateTaskSheet(BuildContext context) {
     final titleCtrl = TextEditingController();
     final descCtrl = TextEditingController();
     DateTime selectedDeadline = DateTime.now().add(const Duration(days: 7));
+    _selectedAssigneeId = null;
+
+    final membersAsync = ref.read(projectMembersProvider(widget.projectId));
 
     showModalBottomSheet(
       context: context,
@@ -245,78 +253,123 @@ class _TasksTabState extends ConsumerState<_TasksTab> {
         builder: (ctx, setModal) => Padding(
           padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
           child: Container(
+            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
             padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
             decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  const Text('New Task', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink900)),
-                  GestureDetector(onTap: () => Navigator.pop(ctx),
-                    child: const Icon(Icons.close_rounded, color: AppColors.ink500)),
-                ]),
-                const SizedBox(height: 20),
-                _SheetField(label: 'TITLE', hint: 'e.g. Design login screen', controller: titleCtrl),
-                const SizedBox(height: 14),
-                _SheetField(label: 'DESCRIPTION', hint: 'Optional details...', controller: descCtrl, maxLines: 2),
-                const SizedBox(height: 14),
-                const Text('DEADLINE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: AppColors.ink500)),
-                const SizedBox(height: 6),
-                GestureDetector(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: selectedDeadline,
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                    );
-                    if (picked != null) setModal(() => selectedDeadline = picked);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.bgAlt, borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.line),
-                    ),
-                    child: Row(children: [
-                      const Icon(Icons.calendar_today_rounded, size: 16, color: AppColors.teal700),
-                      const SizedBox(width: 10),
-                      Text(DateFormat('MMM dd, yyyy').format(selectedDeadline),
-                        style: const TextStyle(fontSize: 14, color: AppColors.ink900, fontWeight: FontWeight.w600)),
-                    ]),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      final title = titleCtrl.text.trim();
-                      if (title.isEmpty) return;
-                      Navigator.pop(ctx);
-                      await ref.read(projectTasksProvider(widget.projectId).notifier).createTask(
-                        CreateTaskRequest(
-                          title: title,
-                          description: descCtrl.text.trim(),
-                          deadline: selectedDeadline,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    const Text('New Task', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink900)),
+                    GestureDetector(onTap: () => Navigator.pop(ctx),
+                      child: const Icon(Icons.close_rounded, color: AppColors.ink500)),
+                  ]),
+                  const SizedBox(height: 20),
+                  _SheetField(label: 'TITLE', hint: 'e.g. Design login screen', controller: titleCtrl),
+                  const SizedBox(height: 14),
+                  _SheetField(label: 'DESCRIPTION', hint: 'Optional details...', controller: descCtrl, maxLines: 2),
+                  const SizedBox(height: 14),
+                  const Text('ASSIGNEE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: AppColors.ink500)),
+                  const SizedBox(height: 6),
+                  membersAsync.when(
+                    data: (members) {
+                      final selectableMembers = members.where((m) => m.memberRole != MemberRole.OWNER).toList();
+                      if (selectableMembers.isEmpty) {
+                        return Text('No members to assign', style: TextStyle(fontSize: 13, color: AppColors.ink400));
+                      }
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.bgAlt, borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.line),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<int>(
+                            value: _selectedAssigneeId,
+                            hint: const Text('Select a member', style: TextStyle(fontSize: 14, color: AppColors.ink400)),
+                            isExpanded: true,
+                            items: selectableMembers.map((m) {
+                              return DropdownMenuItem(
+                                value: m.userId,
+                                child: Text('${m.firstName} ${m.lastName}', style: const TextStyle(fontSize: 14, color: AppColors.ink900)),
+                              );
+                            }).toList(),
+                            onChanged: (val) => setModal(() => _selectedAssigneeId = val),
+                          ),
                         ),
                       );
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.teal700,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      elevation: 0,
-                    ),
-                    child: const Text('Create Task', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                    loading: () => const SizedBox(height: 40, child: Center(child: CircularProgressIndicator())),
+                    error: (_, __) => const Text('Failed to load members', style: TextStyle(fontSize: 13, color: Colors.red)),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 14),
+                  const Text('DEADLINE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: AppColors.ink500)),
+                  const SizedBox(height: 6),
+                  GestureDetector(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDeadline,
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                      );
+                      if (picked != null) setModal(() => selectedDeadline = picked);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.bgAlt, borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.line),
+                      ),
+                      child: Row(children: [
+                        const Icon(Icons.calendar_today_rounded, size: 16, color: AppColors.teal700),
+                        const SizedBox(width: 10),
+                        Text(DateFormat('MMM dd, yyyy').format(selectedDeadline),
+                          style: const TextStyle(fontSize: 14, color: AppColors.ink900, fontWeight: FontWeight.w600)),
+                      ]),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final title = titleCtrl.text.trim();
+                        if (title.isEmpty) return;
+                        Navigator.pop(ctx);
+
+                        final newTask = await ref.read(projectTasksProvider(widget.projectId).notifier).createTask(
+                          CreateTaskRequest(
+                            title: title,
+                            description: descCtrl.text.trim(),
+                            deadline: selectedDeadline,
+                          ),
+                        );
+
+                        if (_selectedAssigneeId != null && newTask != null) {
+                          await ref.read(projectTasksProvider(widget.projectId).notifier).assignTask(
+                            newTask.id,
+                            _selectedAssigneeId!,
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.teal700,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        elevation: 0,
+                      ),
+                      child: const Text('Create Task', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -361,7 +414,7 @@ class _TasksTabState extends ConsumerState<_TasksTab> {
                 itemBuilder: (_, i) => Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: TaskRow(
-                    task: tasks[i], 
+                    task: tasks[i],
                     onToggle: () {
                       final newStatus = tasks[i].status == TaskStatus.DONE ? TaskStatus.TODO : TaskStatus.DONE;
                       ref.read(projectTasksProvider(widget.projectId).notifier).updateTaskStatus(tasks[i].id, newStatus);
@@ -410,9 +463,15 @@ class _BoardView extends StatelessWidget {
               ),
             ]),
             const SizedBox(height: 10),
-            ...tasks.map((t) => _KanbanCard(task: t, onAdvance: () => onAdvance(t))),
-            const SizedBox(height: 6),
-            _AddColumnBtn(onTap: () {}),
+            Expanded(
+              child: ListView(
+                children: [
+                  ...tasks.map((t) => _KanbanCard(task: t, onAdvance: () => onAdvance(t))),
+                  const SizedBox(height: 6),
+                  _AddColumnBtn(onTap: () {}),
+                ],
+              ),
+            ),
           ]),
         );
       }).toList(),
@@ -536,10 +595,10 @@ class _MemberCard extends StatelessWidget {
       ),
       child: Row(children: [
         UserAvatar(
-          name: '${member.firstName} ${member.lastName}', 
-          size: 42, 
-          status: 'online', 
-          imageUrl: member.profilePictureUrl,
+          name: '${member.firstName} ${member.lastName}',
+          size: 42,
+          status: 'online',
+          imageUrl: ApiClient.buildImageUrl(member.profilePictureUrl),
         ),
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -746,32 +805,6 @@ class _Tag extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(color: AppColors.teal50, borderRadius: BorderRadius.circular(999), border: Border.all(color: AppColors.teal100)),
       child: Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.teal700)),
-    );
-  }
-}
-
-class _QuickAction extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  const _QuickAction({required this.icon, required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.lineSoft), boxShadow: AppTheme.shadowSm,
-        ),
-        child: Row(children: [
-          Icon(icon, size: 18, color: AppColors.teal700),
-          const SizedBox(width: 10),
-          Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink900)),
-        ]),
-      ),
     );
   }
 }

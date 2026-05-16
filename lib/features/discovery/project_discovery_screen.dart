@@ -23,9 +23,12 @@ class ProjectDiscoveryScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
+          AnimatedPadding(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+            duration: const Duration(milliseconds: 200),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
               onChanged: (val) => ref.read(projectSearchProvider.notifier).searchProjects(name: val),
               decoration: InputDecoration(
                 hintText: 'Search for projects...',
@@ -43,6 +46,7 @@ class ProjectDiscoveryScreen extends ConsumerWidget {
                 ),
               ),
             ),
+          ),
           ),
           Expanded(
             child: projectsAsync.when(

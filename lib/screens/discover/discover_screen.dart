@@ -24,56 +24,59 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Discover', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.ink900, letterSpacing: -0.4)),
-                  Text('People & open projects', style: TextStyle(fontSize: 11, color: AppColors.ink500)),
-                ],
+        child: AnimatedPadding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          duration: const Duration(milliseconds: 200),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Discover', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.ink900, letterSpacing: -0.4)),
+                    Text('People & open projects', style: TextStyle(fontSize: 11, color: AppColors.ink500)),
+                  ],
+                ),
               ),
-            ),
 
-            // Search bar
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-              child: _SearchBar(
-                value: _query, 
-                onChanged: (v) {
-                  setState(() => _query = v);
-                  if (_tab == 'people') {
-                    ref.read(userSearchProvider.notifier).search(name: v);
-                  } else {
-                    ref.read(projectSearchProvider.notifier).searchProjects(name: v);
+              // Search bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: _SearchBar(
+                  value: _query, 
+                  onChanged: (v) {
+                    setState(() => _query = v);
+                    if (_tab == 'people') {
+                      ref.read(userSearchProvider.notifier).search(name: v);
+                    } else {
+                      ref.read(projectSearchProvider.notifier).searchProjects(name: v);
+                    }
                   }
-                }
+                ),
               ),
-            ),
 
-            // Tab toggle
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-              child: _SegmentedToggle(
-                value: _tab,
-                options: const [('people', 'People'), ('projects', 'Projects')],
-                onChange: (v) {
-                  setState(() => _tab = v);
-                  if (v == 'people') {
-                    ref.read(userSearchProvider.notifier).search(name: _query);
-                  } else {
-                    ref.read(projectSearchProvider.notifier).searchProjects(name: _query);
-                  }
-                },
+              // Tab toggle
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: _SegmentedToggle(
+                  value: _tab,
+                  options: const [('people', 'People'), ('projects', 'Projects')],
+                  onChange: (v) {
+                    setState(() => _tab = v);
+                    if (v == 'people') {
+                      ref.read(userSearchProvider.notifier).search(name: _query);
+                    } else {
+                      ref.read(projectSearchProvider.notifier).searchProjects(name: _query);
+                    }
+                  },
+                ),
               ),
-            ),
 
-            // Content
-            Expanded(
+              // Content
+              Expanded(
               child: _tab == 'people' 
                 ? userSearchAsync.when(
                     data: (users) => users.isEmpty 
@@ -99,6 +102,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                   ),
             ),
           ],
+        ),
         ),
       ),
     );

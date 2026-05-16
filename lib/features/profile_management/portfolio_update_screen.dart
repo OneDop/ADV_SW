@@ -292,7 +292,7 @@ class _PortfolioUpdateScreenState extends ConsumerState<PortfolioUpdateScreen> {
       case ExperienceLevel.BEGINNER: return Icons.star_outline;
       case ExperienceLevel.INTERMEDIATE: return Icons.star_half;
       case ExperienceLevel.ADVANCED: return Icons.star;
-      case ExperienceLevel.EXPERT: return Icons.workspace_premium;
+      case ExperienceLevel.PROFESSIONAL: return Icons.workspace_premium;
     }
   }
 
@@ -451,7 +451,7 @@ class _PortfolioUpdateScreenState extends ConsumerState<PortfolioUpdateScreen> {
       case ExperienceLevel.ADVANCED:
         description = 'Extensive experience, can mentor and lead projects';
         break;
-      case ExperienceLevel.EXPERT:
+      case ExperienceLevel.PROFESSIONAL:
         description = 'Mastery level, industry knowledge and best practices';
         break;
     }

@@ -5,7 +5,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiClient {
   late Dio dio;
   static const String tokenKey = 'auth_token';
-  static const String _baseUrl = 'http://10.0.2.2:8080/api';
+  static const String _baseUrl = 'http://192.168.1.126:8080/api';
+  static const String serverBaseUrl = 'http://192.168.1.126:8080';
+
+  static String? buildImageUrl(String? relativePath) {
+    if (relativePath == null || relativePath.isEmpty) return null;
+    if (relativePath.startsWith('http://') || relativePath.startsWith('https://')) return relativePath;
+    return '$serverBaseUrl$relativePath';
+  }
 
   ApiClient() {
     dio = Dio(BaseOptions(

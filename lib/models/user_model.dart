@@ -2,7 +2,7 @@ enum ExperienceLevel {
   BEGINNER,
   INTERMEDIATE,
   ADVANCED,
-  EXPERT,
+  PROFESSIONAL,
 }
 
 enum Role {

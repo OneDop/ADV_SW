@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:advsw/theme/app_theme.dart';
+import 'package:advsw/providers/auth_provider.dart';
 import 'widgets.dart';
 
-class ForgotPasswordScreen extends StatefulWidget {
+class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _emailCtrl = TextEditingController();
   bool _sent = false;
-  bool _loading = false;
+  String? _error;
 
   @override
   void dispose() {
@@ -22,11 +24,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Future<void> _submit() async {
+    setState(() => _error = null);
     final email = _emailCtrl.text.trim();
-    if (email.isEmpty) return;
-    setState(() => _loading = true);
-    await Future.delayed(const Duration(seconds: 1));
-    if (mounted) setState(() { _loading = false; _sent = true; });
+    if (email.isEmpty) {
+      setState(() => _error = 'Email is required.');
+      return;
+    }
+
+    final success = await ref.read(authProvider.notifier).forgotPassword(email);
+    if (!mounted) return;
+
+    if (success) {
+      setState(() => _sent = true);
+    } else {
+      setState(() => _error = 'Failed to send reset link. Please try again.');
+    }
   }
 
   @override
@@ -87,6 +99,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Widget _buildForm() {
+    final isLoading = ref.watch(authProvider).isLoading;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -96,13 +109,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           icon: Icons.mail_outline_rounded,
           controller: _emailCtrl,
         ),
+        if (_error != null) ...[
+          const SizedBox(height: 12),
+          Text(_error!, style: const TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.w600)),
+        ],
         const SizedBox(height: 24),
-        _loading
+        isLoading
             ? const Center(child: CircularProgressIndicator())
             : PrimaryBtn(
                 label: 'Send reset link',
                 trailing: Icons.send_rounded,
-                onPressed: _submit,
+                onPressed: isLoading ? null : _submit,
               ),
         const SizedBox(height: 16),
         Center(

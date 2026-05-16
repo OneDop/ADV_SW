@@ -26,7 +26,7 @@ class LoginNotifier extends StateNotifier<LoginState> {
   Future<void> login(String email, String password) async {
     state = state.copyWith(status: AuthStatus.loading);
     try {
-      final response = await _apiClient.post('/auth/login', data: {
+      final response = await _apiClient.post('/auth/authenticate', data: {
         'email': email,
         'password': password,
       });

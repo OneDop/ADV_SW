@@ -140,29 +140,27 @@ class _ActivityItem extends ConsumerWidget {
     switch (type) {
       case NotificationType.TASK_ASSIGNED:
         return (bg: AppColors.teal50, fg: AppColors.teal700, icon: Icons.assignment_turned_in_rounded);
-      case NotificationType.MESSAGE_RECEIVED:
+      case NotificationType.NEW_MESSAGE:
         return (bg: const Color(0xFFE8F4FA), fg: const Color(0xFF0E5B85), icon: Icons.chat_bubble_rounded);
-      case NotificationType.PROJECT_UPDATE:
-        return (bg: AppColors.warm100, fg: AppColors.warm700, icon: Icons.update_rounded);
-      case NotificationType.RATING_RECEIVED:
-        return (bg: AppColors.success100, fg: AppColors.success700, icon: Icons.star_rounded);
-      case NotificationType.INVITATION:
+      case NotificationType.PROJECT_INVITATION:
       case NotificationType.JOIN_REQUEST:
+      case NotificationType.JOIN_APPROVED:
+      case NotificationType.JOIN_REJECTED:
         return (bg: const Color(0xFFF1ECFB), fg: const Color(0xFF5A399E), icon: Icons.person_add_rounded);
-      default:
-        return (bg: AppColors.bg, fg: AppColors.ink400, icon: Icons.notifications_rounded);
+      case NotificationType.DEADLINE_REMINDER:
+        return (bg: AppColors.warm100, fg: AppColors.warm700, icon: Icons.update_rounded);
     }
   }
 
   String _getDisplayTitle(NotificationType type) {
     switch (type) {
-      case NotificationType.INVITATION: return 'Project Invitation';
+      case NotificationType.PROJECT_INVITATION: return 'Project Invitation';
       case NotificationType.JOIN_REQUEST: return 'Join Request';
+      case NotificationType.JOIN_APPROVED: return 'Join Approved';
+      case NotificationType.JOIN_REJECTED: return 'Join Rejected';
       case NotificationType.TASK_ASSIGNED: return 'Task Assigned';
-      case NotificationType.MESSAGE_RECEIVED: return 'New Message';
-      case NotificationType.PROJECT_UPDATE: return 'Project Update';
-      case NotificationType.RATING_RECEIVED: return 'New Rating';
-      default: return 'Notification';
+      case NotificationType.NEW_MESSAGE: return 'New Message';
+      case NotificationType.DEADLINE_REMINDER: return 'Deadline Reminder';
     }
   }
 }

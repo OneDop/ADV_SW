@@ -7,39 +7,34 @@ import 'package:advsw/models/message_model.dart';
 class ChatService {
   StompClient? _stompClient;
   static const String _tokenKey = 'auth_token';
-  static const String _wsUrl = 'ws://10.0.2.2:8080/ws';
+  static const String _serverHost = '192.168.1.126';
+  static const int _serverPort = 8080;
 
   final _messageController = StreamController<MessageResponse>.broadcast();
   Stream<MessageResponse> get messages => _messageController.stream;
 
-  // Track active subscriptions to avoid duplicates
   final Set<int> _subscribedProjects = {};
 
   void connect(int projectId) async {
-    // If already connected and active, just ensure we are subscribed to the project
     if (_stompClient != null && _stompClient!.isActive) {
       _subscribeToProject(projectId);
       return;
     }
 
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString(_tokenKey);
+    final token = prefs.getString(_tokenKey) ?? '';
+
+    final wsUrl = 'ws://$_serverHost:$_serverPort/ws?token=$token';
 
     _stompClient = StompClient(
       config: StompConfig(
-        url: _wsUrl,
+        url: wsUrl,
         onConnect: (frame) {
           _subscribeToProject(projectId);
         },
-        stompConnectHeaders: {
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-        webSocketConnectHeaders: {
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-        // ignore: avoid_print
+        stompConnectHeaders: {},
+        webSocketConnectHeaders: {},
         onWebSocketError: (dynamic error) => print('WS Error: $error'),
-        // ignore: avoid_print
         onDisconnect: (frame) => print('Disconnected from STOMP'),
       ),
     );

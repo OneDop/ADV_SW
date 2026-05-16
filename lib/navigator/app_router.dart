@@ -16,9 +16,25 @@ import 'package:advsw/screens/home/home.dart';
 import 'package:advsw/screens/auth/login_screen.dart';
 import 'package:advsw/screens/auth/signup_screen.dart';
 import 'package:advsw/screens/profile/profile.dart';
+import 'package:advsw/services/auth_service.dart';
 
 final router = GoRouter(
   initialLocation: '/login',
+  redirect: (context, state) async {
+    final authService = AuthService();
+    final isLoggedIn = await authService.isLoggedIn();
+    final isAuthRoute = state.matchedLocation == '/login' ||
+        state.matchedLocation == '/signup' ||
+        state.matchedLocation == '/forgot-password';
+
+    if (!isLoggedIn && !isAuthRoute) {
+      return '/login';
+    }
+    if (isLoggedIn && isAuthRoute) {
+      return '/home';
+    }
+    return null;
+  },
   routes: [
     GoRoute(
       path: '/login',

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:advsw/theme/app_theme.dart';
 import 'package:advsw/models/project_model.dart';
 import 'package:advsw/models/task_model.dart';
+import 'package:advsw/services/api_client.dart';
 import 'package:intl/intl.dart';
 
 // ── Avatar (initials fallback) ─────────────────────────────────────────────────
@@ -51,6 +52,7 @@ class UserAvatar extends StatelessWidget {
     final initials = name.trim().split(RegExp(r'\s+')).map((s) => s.isNotEmpty ? s[0] : '').take(2).join().toUpperCase();
     final pal = _palettes[_hash(name) % _palettes.length];
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final resolvedUrl = ApiClient.buildImageUrl(imageUrl);
 
     return Stack(
       clipBehavior: Clip.none,
@@ -59,12 +61,12 @@ class UserAvatar extends StatelessWidget {
           width: size, height: size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: imageUrl == null ? LinearGradient(colors: pal, begin: Alignment.topLeft, end: Alignment.bottomRight) : null,
-            image: imageUrl != null ? DecorationImage(image: NetworkImage(imageUrl!), fit: BoxFit.cover) : null,
+            gradient: resolvedUrl == null ? LinearGradient(colors: pal, begin: Alignment.topLeft, end: Alignment.bottomRight) : null,
+            image: resolvedUrl != null ? DecorationImage(image: NetworkImage(resolvedUrl), fit: BoxFit.cover) : null,
             border: ring > 0 ? Border.all(color: isDark ? AppColors.darkSurface : Colors.white, width: ring) : null,
             boxShadow: ring > 0 ? [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4)] : null,
           ),
-          child: imageUrl == null ? Center(
+          child: resolvedUrl == null ? Center(
             child: Text(initials.isEmpty ? '?' : initials,
               style: TextStyle(
                 fontSize: size * 0.36,
@@ -115,7 +117,7 @@ class AvatarStack extends StatelessWidget {
             String? url;
             if (e.value is ProjectMemberResponse) {
               name = '${e.value.firstName} ${e.value.lastName}';
-              url = e.value.profilePictureUrl;
+              url = ApiClient.buildImageUrl(e.value.profilePictureUrl);
             } else {
               name = e.value.toString();
             }

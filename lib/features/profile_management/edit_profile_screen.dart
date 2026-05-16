@@ -74,6 +74,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 DropdownMenuItem(value: ExperienceLevel.BEGINNER, child: Text('Junior')),
                 DropdownMenuItem(value: ExperienceLevel.INTERMEDIATE, child: Text('Mid')),
                 DropdownMenuItem(value: ExperienceLevel.ADVANCED, child: Text('Senior')),
+                DropdownMenuItem(value: ExperienceLevel.PROFESSIONAL, child: Text('Professional')),
               ],
               onChanged: (val) {
                 if (val != null) setState(() => _experienceLevel = val);

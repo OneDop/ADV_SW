@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:advsw/theme/app_theme.dart';
+import 'package:advsw/providers/auth_provider.dart';
 import 'widgets.dart';
 
-class SignupScreen extends StatefulWidget {
+class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
 
   @override
-  State<SignupScreen> createState() => _SignupScreenState();
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends ConsumerState<SignupScreen> {
   int _step = 1;
+  String? _error;
 
   // Step 1
   final _firstNameCtrl = TextEditingController();
@@ -36,6 +39,37 @@ class _SignupScreenState extends State<SignupScreen> {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleSignup() async {
+    setState(() => _error = null);
+    final firstName = _firstNameCtrl.text.trim();
+    final lastName = _lastNameCtrl.text.trim();
+    final email = _emailCtrl.text.trim();
+    final password = _passwordCtrl.text;
+
+    if (firstName.isEmpty || lastName.isEmpty || email.isEmpty || password.isEmpty) {
+      setState(() => _error = 'All fields are required.');
+      return;
+    }
+    if (password.length < 8) {
+      setState(() => _error = 'Password must be at least 8 characters.');
+      return;
+    }
+
+    final success = await ref.read(authProvider.notifier).signup(
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      password: password,
+    );
+    if (!mounted) return;
+
+    if (success) {
+      context.go('/home');
+    } else {
+      setState(() => _error = 'Signup failed. This email may already be in use.');
+    }
   }
 
   @override
@@ -124,6 +158,10 @@ class _SignupScreenState extends State<SignupScreen> {
         AuthField(label: 'PASSWORD', hint: '••••••••', icon: Icons.lock_outline_rounded, controller: _passwordCtrl, isPassword: true),
         const SizedBox(height: 8),
         const Text('At least 8 characters', style: TextStyle(fontSize: 11, color: AppColors.ink500)),
+        if (_error != null) ...[
+          const SizedBox(height: 12),
+          Text(_error!, style: const TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.w600)),
+        ],
         const SizedBox(height: 24),
         PrimaryBtn(label: 'Continue', trailing: Icons.arrow_forward_rounded, onPressed: () => setState(() => _step = 2)),
       ],
@@ -180,7 +218,17 @@ class _SignupScreenState extends State<SignupScreen> {
           }).toList(),
         ),
         const SizedBox(height: 28),
-        PrimaryBtn(label: 'Create account', trailing: Icons.check_rounded, onPressed: () => context.go('/home')),
+        if (_error != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(_error!, style: const TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.w600)),
+          ),
+        PrimaryBtn(
+          label: 'Create account',
+          trailing: Icons.check_rounded,
+          loading: ref.watch(authProvider).isLoading,
+          onPressed: ref.watch(authProvider).isLoading ? null : _handleSignup,
+        ),
       ],
     );
   }

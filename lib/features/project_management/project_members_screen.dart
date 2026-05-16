@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:advsw/theme/app_theme.dart';
 import 'package:advsw/models/project_model.dart';
 import 'package:advsw/providers/project_provider.dart';
+import 'package:advsw/services/api_client.dart';
 
 class ProjectMembersScreen extends ConsumerWidget {
   final int projectId;
@@ -47,7 +48,7 @@ class ProjectMembersScreen extends ConsumerWidget {
                 children: [
                   CircleAvatar(
                     backgroundColor: AppColors.teal100,
-                    backgroundImage: member.profilePictureUrl != null ? NetworkImage(member.profilePictureUrl!) : null,
+                    backgroundImage: ApiClient.buildImageUrl(member.profilePictureUrl) != null ? NetworkImage(ApiClient.buildImageUrl(member.profilePictureUrl)!) : null,
                     child: member.profilePictureUrl == null 
                       ? Text(member.firstName.isNotEmpty ? member.firstName[0] : '?', 
                           style: const TextStyle(color: AppColors.teal700, fontWeight: FontWeight.bold))

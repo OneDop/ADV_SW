@@ -1,25 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:advsw/theme/app_theme.dart';
+import 'package:advsw/providers/auth_provider.dart';
 import 'widgets.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailCtrl    = TextEditingController(text: 'alex.rivera@quietengine.io');
   final _passwordCtrl = TextEditingController(text: 'demo1234');
   bool _remember = true;
+  String? _error;
 
   @override
   void dispose() {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    setState(() => _error = null);
+    final email = _emailCtrl.text.trim();
+    final password = _passwordCtrl.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() => _error = 'Email and password are required.');
+      return;
+    }
+
+    final success = await ref.read(authProvider.notifier).login(email, password);
+    if (!mounted) return;
+
+    if (success) {
+      context.go('/home');
+    } else {
+      setState(() => _error = 'Invalid email or password. Please try again.');
+    }
   }
 
   @override
@@ -126,10 +149,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 20),
 
+                      if (_error != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Text(_error!, style: const TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.w600)),
+                        ),
                       PrimaryBtn(
                         label: 'Sign in',
                         trailing: Icons.arrow_forward_rounded,
-                        onPressed: () => context.go('/home'),
+                        loading: ref.watch(authProvider).isLoading,
+                        onPressed: ref.watch(authProvider).isLoading ? null : _handleLogin,
                       ),
                       const SizedBox(height: 20),
 

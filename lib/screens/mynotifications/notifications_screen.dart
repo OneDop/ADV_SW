@@ -1,36 +1,17 @@
+import 'package:advsw/models/notification_model.dart';
+import 'package:advsw/providers/notification_provider.dart';
+import 'package:advsw/providers/invitation_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:advsw/theme/app_theme.dart';
-import 'package:advsw/data/seed_data.dart';
 
-class NotificationsScreen extends StatefulWidget {
+class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
 
   @override
-  State<NotificationsScreen> createState() => _NotificationsScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notificationsAsync = ref.watch(notificationsProvider);
 
-class _NotificationsScreenState extends State<NotificationsScreen> {
-  late List<AppNotification> _notifs;
-
-  @override
-  void initState() {
-    super.initState();
-    _notifs = List.from(SeedData.notifications);
-  }
-
-  void _dismiss(String id) => setState(() => _notifs.removeWhere((n) => n.id == id));
-  void _clearAll() => setState(() => _notifs.clear());
-
-  List<AppNotification> get _today => _notifs
-      .where((n) => n.meta.contains('ago') || n.meta.contains('m ago') || n.meta.contains('h ago'))
-      .toList();
-
-  List<AppNotification> get _earlier => _notifs
-      .where((n) => !n.meta.contains('ago') || n.meta.contains('Yesterday'))
-      .toList();
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
@@ -42,10 +23,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               children: [
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   const Text('Updates', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.ink900, letterSpacing: -0.4)),
-                  Text('${_notifs.length} new', style: const TextStyle(fontSize: 11, color: AppColors.ink500)),
+                  notificationsAsync.when(
+                    data: (notifs) => Text('${notifs.length} new', style: const TextStyle(fontSize: 11, color: AppColors.ink500)),
+                    loading: () => const Text('Loading...', style: TextStyle(fontSize: 11, color: AppColors.ink500)),
+                    error: (_, __) => const Text('Error', style: TextStyle(fontSize: 11, color: AppColors.ink500)),
+                  ),
                 ])),
                 GestureDetector(
-                  onTap: _clearAll,
+                  onTap: () => ref.read(notificationsProvider.notifier).deleteAllNotifications(),
                   child: Container(
                     width: 40, height: 40,
                     decoration: BoxDecoration(
@@ -60,21 +45,25 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
 
           Expanded(
-            child: _notifs.isEmpty
-                ? _EmptyState()
-                : ListView(
+            child: notificationsAsync.when(
+              data: (notifs) {
+                if (notifs.isEmpty) return _EmptyState();
+                
+                return RefreshIndicator(
+                  onRefresh: () => ref.read(notificationsProvider.notifier).refresh(),
+                  child: ListView.builder(
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 110),
-                    children: [
-                      if (_today.isNotEmpty) ...[
-                        _GroupLabel('Today'),
-                        ..._today.map((n) => _NotifItem(n: n, onDismiss: () => _dismiss(n.id), onAction: () => _dismiss(n.id))),
-                      ],
-                      if (_earlier.isNotEmpty) ...[
-                        _GroupLabel('Earlier'),
-                        ..._earlier.map((n) => _NotifItem(n: n, onDismiss: () => _dismiss(n.id), onAction: () => _dismiss(n.id))),
-                      ],
-                    ],
+                    itemCount: notifs.length,
+                    itemBuilder: (_, i) => _NotifItem(
+                      n: notifs[i], 
+                      onDismiss: () => ref.read(notificationsProvider.notifier).deleteNotification(notifs[i].id),
+                    ),
                   ),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, _) => Center(child: Text('Error: $err')),
+            ),
           ),
         ]),
       ),
@@ -84,39 +73,44 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
 // ── Widgets ───────────────────────────────────────────────────────────────────
 
-class _GroupLabel extends StatelessWidget {
-  final String label;
-  const _GroupLabel(this.label);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 12, bottom: 8),
-      child: Text(label.toUpperCase(),
-        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: AppColors.ink500)),
-    );
-  }
-}
-
-class _NotifItem extends StatelessWidget {
-  final AppNotification n;
+class _NotifItem extends ConsumerWidget {
+  final NotificationResponse n;
   final VoidCallback onDismiss;
-  final VoidCallback onAction;
 
-  const _NotifItem({required this.n, required this.onDismiss, required this.onAction});
+  const _NotifItem({required this.n, required this.onDismiss});
 
   ({Color bg, Color fg}) get _tone {
     switch (n.type) {
-      case 'deadline': return (bg: AppColors.warm100,    fg: AppColors.warm700);
-      case 'task':     return (bg: AppColors.teal50,     fg: AppColors.teal700);
-      case 'message':  return (bg: const Color(0xFFE8F4FA), fg: const Color(0xFF0E5B85));
-      default:         return (bg: const Color(0xFFF1ECFB), fg: const Color(0xFF5A399E));
+      case NotificationType.TASK_ASSIGNED:
+        return (bg: AppColors.teal50, fg: AppColors.teal700);
+      case NotificationType.MESSAGE_RECEIVED:
+        return (bg: const Color(0xFFE8F4FA), fg: const Color(0xFF0E5B85));
+      case NotificationType.PROJECT_UPDATE:
+        return (bg: AppColors.warm100, fg: AppColors.warm700);
+      case NotificationType.RATING_RECEIVED:
+        return (bg: AppColors.success100, fg: AppColors.success700);
+      case NotificationType.INVITATION:
+      case NotificationType.JOIN_REQUEST:
+        return (bg: const Color(0xFFF1ECFB), fg: const Color(0xFF5A399E));
+    }
+  }
+
+  String get _displayTitle {
+    switch (n.type) {
+      case NotificationType.INVITATION: return 'Project Invitation';
+      case NotificationType.JOIN_REQUEST: return 'Join Request';
+      case NotificationType.TASK_ASSIGNED: return 'Task Assigned';
+      case NotificationType.MESSAGE_RECEIVED: return 'New Message';
+      case NotificationType.PROJECT_UPDATE: return 'Project Update';
+      case NotificationType.RATING_RECEIVED: return 'New Rating';
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = _tone;
+    final bool isActionable = n.type == NotificationType.INVITATION || n.type == NotificationType.JOIN_REQUEST;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
@@ -124,57 +118,83 @@ class _NotifItem extends StatelessWidget {
         color: Colors.white, borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.lineSoft), boxShadow: AppTheme.shadowSm,
       ),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(
-          width: 38, height: 38,
-          decoration: BoxDecoration(color: t.bg, borderRadius: BorderRadius.circular(12)),
-          child: Icon(n.icon, size: 18, color: t.fg),
-        ),
-        const SizedBox(width: 12),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(n.title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.ink900)),
-          const SizedBox(height: 2),
-          Text(n.body, style: const TextStyle(fontSize: 12, color: AppColors.ink700, height: 1.4)),
-          const SizedBox(height: 6),
-          Text(n.meta, style: const TextStyle(fontSize: 10, color: AppColors.ink500)),
-          if (n.actionable) ...[
-            const SizedBox(height: 10),
+      child: Column(
+        children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Container(
+              width: 38, height: 38,
+              decoration: BoxDecoration(color: t.bg, borderRadius: BorderRadius.circular(12)),
+              child: Icon(
+                isActionable ? Icons.person_add_outlined : Icons.notifications_outlined, 
+                size: 18, 
+                color: t.fg
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(_displayTitle, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.ink900)),
+              const SizedBox(height: 2),
+              Text(n.message, style: const TextStyle(fontSize: 12, color: AppColors.ink700, height: 1.4)),
+              const SizedBox(height: 6),
+              Text('${n.createdAt.day}/${n.createdAt.month} • ${n.createdAt.hour}:${n.createdAt.minute.toString().padLeft(2, '0')}', 
+                style: const TextStyle(fontSize: 10, color: AppColors.ink500)),
+            ])),
+            GestureDetector(
+              onTap: onDismiss,
+              child: const Padding(padding: EdgeInsets.all(4), child: Icon(Icons.close_rounded, size: 16, color: AppColors.ink400)),
+            ),
+          ]),
+          if (isActionable) ...[
+            const SizedBox(height: 12),
             Row(children: [
-              _ActionBtn(label: 'Accept', onTap: onAction),
+              Expanded(
+                child: _ActionButton(
+                  label: 'Reject',
+                  onTap: () => ref.read(userInvitationsProvider.notifier).respond(n.id, false),
+                  isPrimary: false,
+                ),
+              ),
               const SizedBox(width: 8),
-              _ActionBtn(label: 'Decline', onTap: onDismiss, secondary: true),
+              Expanded(
+                child: _ActionButton(
+                  label: 'Accept',
+                  onTap: () => ref.read(userInvitationsProvider.notifier).respond(n.id, true),
+                  isPrimary: true,
+                ),
+              ),
             ]),
           ],
-        ])),
-        GestureDetector(
-          onTap: onDismiss,
-          child: const Padding(padding: EdgeInsets.all(4), child: Icon(Icons.close_rounded, size: 16, color: AppColors.ink400)),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 }
 
-class _ActionBtn extends StatelessWidget {
+class _ActionButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
-  final bool secondary;
-  const _ActionBtn({required this.label, required this.onTap, this.secondary = false});
+  final bool isPrimary;
+
+  const _ActionButton({required this.label, required this.onTap, required this.isPrimary});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
+          color: isPrimary ? AppColors.teal700 : Colors.white,
           borderRadius: BorderRadius.circular(10),
-          color: secondary ? Colors.white : AppColors.teal700,
-          border: secondary ? Border.all(color: AppColors.line) : null,
-          gradient: secondary ? null : AppTheme.primaryGradient,
-          boxShadow: secondary ? null : [BoxShadow(color: AppColors.teal700.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 4))],
+          border: isPrimary ? null : Border.all(color: AppColors.line),
         ),
-        child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: secondary ? AppColors.ink700 : Colors.white)),
+        child: Center(
+          child: Text(label, style: TextStyle(
+            fontSize: 12, 
+            fontWeight: FontWeight.w700, 
+            color: isPrimary ? Colors.white : AppColors.ink700
+          )),
+        ),
       ),
     );
   }

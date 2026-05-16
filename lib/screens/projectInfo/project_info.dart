@@ -1,30 +1,34 @@
+import 'package:advsw/models/message_model.dart';
+import 'package:advsw/models/project_model.dart';
+import 'package:advsw/models/task_model.dart';
+import 'package:advsw/providers/chat_provider.dart';
+import 'package:advsw/providers/project_provider.dart';
+import 'package:advsw/providers/task_provider.dart';
+import 'package:advsw/providers/user_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:advsw/theme/app_theme.dart';
-import 'package:advsw/data/seed_data.dart';
+import 'package:intl/intl.dart';
 import 'widgets.dart';
 
-class ProjectInfoScreen extends StatefulWidget {
+class ProjectInfoScreen extends ConsumerStatefulWidget {
   final String projectId;
   const ProjectInfoScreen({super.key, required this.projectId});
 
   @override
-  State<ProjectInfoScreen> createState() => _ProjectInfoScreenState();
+  ConsumerState<ProjectInfoScreen> createState() => _ProjectInfoScreenState();
 }
 
-class _ProjectInfoScreenState extends State<ProjectInfoScreen> with SingleTickerProviderStateMixin {
+class _ProjectInfoScreenState extends ConsumerState<ProjectInfoScreen> with SingleTickerProviderStateMixin {
   late TabController _tabCtrl;
-  late AppProject _project;
-  late List<AppTask> _tasks;
-  late List<AppMessage> _messages;
+  late int _id;
 
   @override
   void initState() {
     super.initState();
     _tabCtrl = TabController(length: 4, vsync: this);
-    _project = SeedData.projects.firstWhere((p) => p.id == widget.projectId, orElse: () => SeedData.projects.first);
-    _tasks   = List.from(SeedData.tasks[widget.projectId] ?? SeedData.tasks['p1'] ?? []);
-    _messages = List.from(SeedData.messages[widget.projectId] ?? SeedData.messages['p1'] ?? []);
+    _id = int.tryParse(widget.projectId) ?? 0;
   }
 
   @override
@@ -33,122 +37,115 @@ class _ProjectInfoScreenState extends State<ProjectInfoScreen> with SingleTicker
     super.dispose();
   }
 
-  void _advanceTask(AppTask t) {
-    const order = ['todo', 'progress', 'done'];
-    final idx = order.indexOf(t.status);
-    if (idx < order.length - 1) {
-      setState(() => t.status = order[idx + 1]);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final projectAsync = ref.watch(projectDetailsProvider(_id));
+
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
-        child: Column(children: [
-          // ── Header ────────────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-            child: Row(children: [
-              GestureDetector(
-                onTap: () => context.pop(),
-                child: Container(
-                  width: 40, height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white, borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.line), boxShadow: AppTheme.shadowSm,
+        child: projectAsync.when(
+          data: (project) => Column(children: [
+            // ── Header ────────────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              child: Row(children: [
+                GestureDetector(
+                  onTap: () => context.pop(),
+                  child: Container(
+                    width: 40, height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white, borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.line), boxShadow: AppTheme.shadowSm,
+                    ),
+                    child: const Icon(Icons.arrow_back_rounded, size: 20, color: AppColors.ink900),
                   ),
-                  child: const Icon(Icons.arrow_back_rounded, size: 20, color: AppColors.ink900),
                 ),
+                const SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(project.name,
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink900, letterSpacing: -0.3)),
+                  Text('${project.status.name} · Owner: ${project.ownerName}',
+                    style: const TextStyle(fontSize: 11, color: AppColors.ink500)),
+                ])),
+                _HeaderBtn(icon: Icons.forum_outlined, onTap: () => _tabCtrl.animateTo(3)),
+                const SizedBox(width: 8),
+                _HeaderBtn(icon: Icons.more_horiz_rounded, onTap: () {}),
+              ]),
+            ),
+
+            // ── Tab bar ───────────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              child: TabBar(
+                controller: _tabCtrl,
+                labelColor: AppColors.teal700,
+                unselectedLabelColor: AppColors.ink500,
+                labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                indicatorColor: AppColors.teal700,
+                indicatorSize: TabBarIndicatorSize.label,
+                dividerColor: AppColors.lineSoft,
+                tabs: const [
+                  Tab(text: 'Overview'),
+                  Tab(text: 'Tasks'),
+                  Tab(text: 'Members'),
+                  Tab(text: 'Chat'),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(_project.name,
-                  maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink900, letterSpacing: -0.3)),
-                Text('${_project.status} · ${_project.members.length} members',
-                  style: const TextStyle(fontSize: 11, color: AppColors.ink500)),
-              ])),
-              _HeaderBtn(icon: Icons.forum_outlined, onTap: () => _tabCtrl.animateTo(3)),
-              const SizedBox(width: 8),
-              _HeaderBtn(icon: Icons.more_horiz_rounded, onTap: () {}),
-            ]),
-          ),
-
-          // ── Tab bar ───────────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-            child: TabBar(
-              controller: _tabCtrl,
-              labelColor: AppColors.teal700,
-              unselectedLabelColor: AppColors.ink500,
-              labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
-              unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-              indicatorColor: AppColors.teal700,
-              indicatorSize: TabBarIndicatorSize.label,
-              dividerColor: AppColors.lineSoft,
-              tabs: const [
-                Tab(text: 'Overview'),
-                Tab(text: 'Tasks'),
-                Tab(text: 'Members'),
-                Tab(text: 'Chat'),
-              ],
             ),
-          ),
 
-          // ── Content ───────────────────────────────────────────────────────
-          Expanded(
-            child: TabBarView(
-              controller: _tabCtrl,
-              children: [
-                _OverviewTab(project: _project),
-                _TasksTab(project: _project, tasks: _tasks, onAdvance: _advanceTask,
-                  onToggle: (t) => setState(() { t.status = t.status == 'done' ? 'todo' : 'done'; })),
-                _MembersTab(project: _project),
-                _ChatTab(project: _project, messages: _messages,
-                  onSend: (text) => setState(() {
-                    _messages.add(AppMessage(id: 'm${DateTime.now().millisecondsSinceEpoch}',
-                      userId: SeedData.currentUser.id, text: text, time: 'now'));
-                  })),
-              ],
+            // ── Content ───────────────────────────────────────────────────────
+            Expanded(
+              child: TabBarView(
+                controller: _tabCtrl,
+                children: [
+                  _OverviewTab(project: project),
+                  _TasksTab(projectId: _id),
+                  _MembersTab(projectId: _id, ownerId: project.ownerId),
+                  _ChatTab(projectId: _id),
+                ],
+              ),
             ),
-          ),
-        ]),
+          ]),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, _) => Center(child: Text('Error: $err')),
+        ),
       ),
     );
   }
 }
 
 // ── Overview tab ──────────────────────────────────────────────────────────────
-class _OverviewTab extends StatelessWidget {
-  final AppProject project;
+class _OverviewTab extends ConsumerWidget {
+  final ProjectResponse project;
   const _OverviewTab({required this.project});
 
   @override
-  Widget build(BuildContext context) {
-    final total = project.taskCounts.total;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final membersAsync = ref.watch(projectMembersProvider(project.id));
+    final tasksAsync = ref.watch(projectTasksProvider(project.id));
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
       children: [
-        // Project heading
         Row(children: [
           Container(
             width: 52, height: 52,
-            decoration: BoxDecoration(color: project.iconBg, borderRadius: BorderRadius.circular(14)),
-            child: Icon(project.icon, size: 26, color: AppColors.teal700),
+            decoration: BoxDecoration(color: AppColors.teal50, borderRadius: BorderRadius.circular(14)),
+            child: const Icon(Icons.architecture, size: 26, color: AppColors.teal700),
           ),
           const SizedBox(width: 14),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(project.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.ink900, letterSpacing: -0.3)),
             const SizedBox(height: 6),
-            Wrap(spacing: 6, children: project.tags.map((t) => _Tag(t)).toList()),
+            const Wrap(spacing: 6, children: [_Tag('Project'), _Tag('Active')]),
           ])),
         ]),
         const SizedBox(height: 12),
         Text(project.description, style: const TextStyle(fontSize: 13, color: AppColors.ink700, height: 1.5)),
 
-        // Progress bento
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(18),
@@ -157,28 +154,31 @@ class _OverviewTab extends StatelessWidget {
             boxShadow: AppTheme.shadowMd,
           ),
           child: Row(children: [
-            ProgressRing(value: project.progress, size: 64, stroke: 6),
+            const ProgressRing(value: 0.5, size: 64, stroke: 6),
             const SizedBox(width: 18),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('Overall progress', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white)),
               const SizedBox(height: 2),
-              Text('${project.taskCounts.done} of $total tasks complete',
-                style: const TextStyle(fontSize: 12, color: Colors.white70)),
+              tasksAsync.when(
+                data: (tasks) => Text('${tasks.where((t) => t.status == TaskStatus.DONE).length} of ${tasks.length} tasks complete',
+                  style: const TextStyle(fontSize: 12, color: Colors.white70)),
+                loading: () => const Text('Loading tasks...', style: TextStyle(fontSize: 12, color: Colors.white70)),
+                error: (_, __) => const Text('Error loading tasks', style: TextStyle(fontSize: 12, color: Colors.white70)),
+              ),
             ])),
           ]),
         ),
 
-        // Bento row
         const SizedBox(height: 12),
         Row(children: [
           Expanded(child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(color: AppColors.warm100, borderRadius: BorderRadius.circular(20)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('URGENT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.warm700, letterSpacing: 0.8)),
-              Text('${project.taskCounts.progress}',
-                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.warm700)),
-              const Text('tasks in progress', style: TextStyle(fontSize: 11, color: AppColors.warm700)),
+              const Text('STATUS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.warm700, letterSpacing: 0.8)),
+              Text(project.status.name,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.warm700)),
+              const Text('Current project status', style: TextStyle(fontSize: 11, color: AppColors.warm700)),
             ]),
           )),
           const SizedBox(width: 12),
@@ -188,14 +188,22 @@ class _OverviewTab extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('TEAM', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.teal700, letterSpacing: 0.8)),
               const SizedBox(height: 8),
-              AvatarStack(members: project.members, size: 26, max: 4),
-              const SizedBox(height: 8),
-              Text('${project.members.length} members', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.teal700)),
+              membersAsync.when(
+                data: (m) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AvatarStack(members: m, size: 26, max: 4),
+                    const SizedBox(height: 8),
+                    Text('${m.length} members', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.teal700)),
+                  ],
+                ),
+                loading: () => const Text('...', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.teal700)),
+                error: (_, __) => const Text('!', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.teal700)),
+              ),
             ]),
           )),
         ]),
 
-        // Quick actions
         const SectionHeader(title: 'Quick actions'),
         GridView.count(
           crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10,
@@ -207,56 +215,27 @@ class _OverviewTab extends StatelessWidget {
             _QuickAction(icon: Icons.edit_outlined, label: 'Edit info', onTap: () {}),
           ],
         ),
-
-        // Recent activity
-        const SectionHeader(title: 'Recent activity'),
-        ...[
-          (Icons.check_circle_outline_rounded, 'Priya marked "Asset pack export" as done', '12m ago', AppColors.success100, AppColors.success700),
-          (Icons.chat_bubble_outline_rounded,  'Mira pushed an update to the design doc',  '1h ago',  const Color(0xFFE8F4FA), const Color(0xFF0E5B85)),
-          (Icons.person_add_alt_1_rounded,     'Léo joined the project',                    '3h ago',  AppColors.teal50, AppColors.teal700),
-        ].map((a) => Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.white, borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.lineSoft),
-          ),
-          child: Row(children: [
-            Container(width: 30, height: 30, decoration: BoxDecoration(color: a.$4, borderRadius: BorderRadius.circular(10)),
-              child: Icon(a.$1, size: 16, color: a.$5)),
-            const SizedBox(width: 12),
-            Expanded(child: Text(a.$2, style: const TextStyle(fontSize: 12, color: AppColors.ink700))),
-            Text(a.$3, style: const TextStyle(fontSize: 10, color: AppColors.ink400)),
-          ]),
-        )),
       ],
     );
   }
 }
 
 // ── Tasks tab ─────────────────────────────────────────────────────────────────
-class _TasksTab extends StatefulWidget {
-  final AppProject project;
-  final List<AppTask> tasks;
-  final ValueChanged<AppTask> onAdvance;
-  final ValueChanged<AppTask> onToggle;
-  const _TasksTab({required this.project, required this.tasks, required this.onAdvance, required this.onToggle});
+class _TasksTab extends ConsumerStatefulWidget {
+  final int projectId;
+  const _TasksTab({required this.projectId});
 
   @override
-  State<_TasksTab> createState() => _TasksTabState();
+  ConsumerState<_TasksTab> createState() => _TasksTabState();
 }
 
-class _TasksTabState extends State<_TasksTab> {
+class _TasksTabState extends ConsumerState<_TasksTab> {
   String _view = 'board';
-
-  Map<String, List<AppTask>> get _byStatus => {
-    'todo':     widget.tasks.where((t) => t.status == 'todo').toList(),
-    'progress': widget.tasks.where((t) => t.status == 'progress').toList(),
-    'done':     widget.tasks.where((t) => t.status == 'done').toList(),
-  };
 
   @override
   Widget build(BuildContext context) {
+    final tasksAsync = ref.watch(projectTasksProvider(widget.projectId));
+
     return Column(children: [
       Padding(
         padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
@@ -267,15 +246,50 @@ class _TasksTabState extends State<_TasksTab> {
           _AddBtn(onTap: () {}),
         ]),
       ),
-      Expanded(child: _view == 'board' ? _BoardView(byStatus: _byStatus, onAdvance: widget.onAdvance)
-                                       : _ListView(tasks: widget.tasks, onToggle: widget.onToggle)),
+      Expanded(
+        child: tasksAsync.when(
+          data: (tasks) {
+            if (_view == 'board') {
+              final byStatus = {
+                'todo':     tasks.where((t) => t.status == TaskStatus.TODO).toList(),
+                'progress': tasks.where((t) => t.status == TaskStatus.IN_PROGRESS).toList(),
+                'done':     tasks.where((t) => t.status == TaskStatus.DONE).toList(),
+              };
+              return _BoardView(byStatus: byStatus, onAdvance: (t) {
+                if (t.status == TaskStatus.TODO) {
+                  ref.read(projectTasksProvider(widget.projectId).notifier).updateTaskStatus(t.id, TaskStatus.IN_PROGRESS);
+                } else if (t.status == TaskStatus.IN_PROGRESS) {
+                  ref.read(projectTasksProvider(widget.projectId).notifier).updateTaskStatus(t.id, TaskStatus.DONE);
+                }
+              });
+            } else {
+              return ListView.builder(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 110),
+                itemCount: tasks.length,
+                itemBuilder: (_, i) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: TaskRow(
+                    task: tasks[i], 
+                    onToggle: () {
+                      final newStatus = tasks[i].status == TaskStatus.DONE ? TaskStatus.TODO : TaskStatus.DONE;
+                      ref.read(projectTasksProvider(widget.projectId).notifier).updateTaskStatus(tasks[i].id, newStatus);
+                    }
+                  ),
+                ),
+              );
+            }
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, _) => Center(child: Text('Error: $err')),
+        ),
+      ),
     ]);
   }
 }
 
 class _BoardView extends StatelessWidget {
-  final Map<String, List<AppTask>> byStatus;
-  final ValueChanged<AppTask> onAdvance;
+  final Map<String, List<TaskResponse>> byStatus;
+  final ValueChanged<TaskResponse> onAdvance;
   const _BoardView({required this.byStatus, required this.onAdvance});
 
   @override
@@ -314,44 +328,20 @@ class _BoardView extends StatelessWidget {
   }
 }
 
-class _ListView extends StatelessWidget {
-  final List<AppTask> tasks;
-  final ValueChanged<AppTask> onToggle;
-  const _ListView({required this.tasks, required this.onToggle});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 110),
-      itemCount: tasks.length,
-      itemBuilder: (_, i) => Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: TaskRow(task: tasks[i], onToggle: () => onToggle(tasks[i])),
-      ),
-    );
-  }
-}
-
 class _KanbanCard extends StatelessWidget {
-  final AppTask task;
+  final TaskResponse task;
   final VoidCallback onAdvance;
   const _KanbanCard({required this.task, required this.onAdvance});
 
   @override
   Widget build(BuildContext context) {
-    final isHigh = task.priority == 'High';
-    final isDone = task.status == 'done';
+    final isDone = task.status == TaskStatus.DONE;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white, borderRadius: BorderRadius.circular(16),
-        border: Border(
-          left: BorderSide(color: isHigh ? AppColors.warm600 : AppColors.lineSoft, width: isHigh ? 3 : 1),
-          top: BorderSide(color: AppColors.lineSoft),
-          right: BorderSide(color: AppColors.lineSoft),
-          bottom: BorderSide(color: AppColors.lineSoft),
-        ),
+        border: Border.all(color: AppColors.lineSoft),
         boxShadow: AppTheme.shadowSm,
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -359,13 +349,12 @@ class _KanbanCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: isHigh ? AppColors.warm100 : AppColors.teal50,
+              color: AppColors.teal50,
               borderRadius: BorderRadius.circular(999),
             ),
-            child: Text(task.category,
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: isHigh ? AppColors.warm700 : AppColors.teal700)),
+            child: const Text('TASK',
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.teal700)),
           ),
-          if (isHigh) const Icon(Icons.flag_rounded, size: 14, color: AppColors.warm600),
         ]),
         const SizedBox(height: 8),
         Text(task.title,
@@ -376,7 +365,7 @@ class _KanbanCard extends StatelessWidget {
           Row(children: [
             const Icon(Icons.schedule_rounded, size: 13, color: AppColors.ink500),
             const SizedBox(width: 4),
-            Text(task.due, style: const TextStyle(fontSize: 11, color: AppColors.ink500)),
+            Text(DateFormat('MMM dd').format(task.deadline), style: const TextStyle(fontSize: 11, color: AppColors.ink500)),
           ]),
           if (!isDone)
             GestureDetector(
@@ -394,52 +383,52 @@ class _KanbanCard extends StatelessWidget {
 }
 
 // ── Members tab ───────────────────────────────────────────────────────────────
-class _MembersTab extends StatelessWidget {
-  final AppProject project;
-  const _MembersTab({required this.project});
+class _MembersTab extends ConsumerWidget {
+  final int projectId;
+  final int ownerId;
+  const _MembersTab({required this.projectId, required this.ownerId});
 
   @override
-  Widget build(BuildContext context) {
-    final isOwner = project.ownerId == SeedData.currentUser.id;
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
-      children: [
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text('Members (${project.members.length})',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink900)),
-          _AddBtn(label: 'Invite', onTap: () {}),
-        ]),
-        const SizedBox(height: 14),
-        ...project.members.map((m) => _MemberCard(
-          member: m,
-          isSelf: m.id == SeedData.currentUser.id,
-          isOwner: isOwner,
-        )),
-        if (!isOwner) ...[
-          const SizedBox(height: 16),
-          GestureDetector(
-            onTap: () => context.go('/projects'),
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.white, borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFF4C3C3)),
-              ),
-              child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Icon(Icons.logout_rounded, size: 18, color: Color(0xFF9B1C1C)),
-                SizedBox(width: 8),
-                Text('Leave project', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF9B1C1C))),
-              ]),
-            ),
-          ),
-        ],
-      ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final membersAsync = ref.watch(projectMembersProvider(projectId));
+    final currentUserAsync = ref.watch(userProfileProvider);
+
+    return membersAsync.when(
+      data: (members) {
+        final currentUserId = currentUserAsync.value?.id;
+        final isOwner = ownerId == currentUserId;
+
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
+          children: [
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Text('Members (${members.length})',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink900)),
+              if (isOwner)
+                _AddBtn(
+                  label: 'Manage', 
+                  onTap: () => context.push('/project/$projectId/manage-members')
+                )
+              else
+                _AddBtn(label: 'Invite', onTap: () {}),
+            ]),
+            const SizedBox(height: 14),
+            ...members.map((m) => _MemberCard(
+              member: m,
+              isSelf: m.userId == currentUserId,
+              isOwner: isOwner,
+            )),
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, _) => Center(child: Text('Error: $err')),
     );
   }
 }
 
 class _MemberCard extends StatelessWidget {
-  final ProjectMember member;
+  final ProjectMemberResponse member;
   final bool isSelf;
   final bool isOwner;
   const _MemberCard({required this.member, required this.isSelf, required this.isOwner});
@@ -454,14 +443,19 @@ class _MemberCard extends StatelessWidget {
         border: Border.all(color: AppColors.lineSoft), boxShadow: AppTheme.shadowSm,
       ),
       child: Row(children: [
-        UserAvatar(name: member.name, size: 42, status: member.status),
+        UserAvatar(
+          name: '${member.firstName} ${member.lastName}', 
+          size: 42, 
+          status: 'online', 
+          imageUrl: member.profilePictureUrl,
+        ),
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Text(member.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.ink900)),
+            Text('${member.firstName} ${member.lastName}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.ink900)),
             if (isSelf) const Text(' (you)', style: TextStyle(fontSize: 12, color: AppColors.ink400, fontWeight: FontWeight.w600)),
           ]),
-          Text(member.role, style: const TextStyle(fontSize: 11, color: AppColors.ink500)),
+          Text(member.memberRole.name, style: const TextStyle(fontSize: 11, color: AppColors.ink500)),
         ])),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -469,7 +463,7 @@ class _MemberCard extends StatelessWidget {
             color: AppColors.bgAlt, borderRadius: BorderRadius.circular(10),
             border: Border.all(color: AppColors.line),
           ),
-          child: Text(member.role, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.ink700)),
+          child: Text(member.memberRole.name, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.ink700)),
         ),
       ]),
     );
@@ -477,17 +471,15 @@ class _MemberCard extends StatelessWidget {
 }
 
 // ── Chat tab ──────────────────────────────────────────────────────────────────
-class _ChatTab extends StatefulWidget {
-  final AppProject project;
-  final List<AppMessage> messages;
-  final ValueChanged<String> onSend;
-  const _ChatTab({required this.project, required this.messages, required this.onSend});
+class _ChatTab extends ConsumerStatefulWidget {
+  final int projectId;
+  const _ChatTab({required this.projectId});
 
   @override
-  State<_ChatTab> createState() => _ChatTabState();
+  ConsumerState<_ChatTab> createState() => _ChatTabState();
 }
 
-class _ChatTabState extends State<_ChatTab> {
+class _ChatTabState extends ConsumerState<_ChatTab> {
   final _ctrl   = TextEditingController();
   final _scroll = ScrollController();
 
@@ -501,7 +493,7 @@ class _ChatTabState extends State<_ChatTab> {
   void _send() {
     final text = _ctrl.text.trim();
     if (text.isEmpty) return;
-    widget.onSend(text);
+    ref.read(chatProvider(widget.projectId).notifier).sendMessage(text);
     _ctrl.clear();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) {
@@ -511,23 +503,26 @@ class _ChatTabState extends State<_ChatTab> {
     });
   }
 
-  ProjectMember? _memberFor(String userId) =>
-      widget.project.members.where((m) => m.id == userId).firstOrNull;
-
   @override
   Widget build(BuildContext context) {
+    final messagesAsync = ref.watch(chatProvider(widget.projectId));
+    final currentUserAsync = ref.watch(userProfileProvider);
+
     return Column(children: [
       Expanded(
-        child: ListView.builder(
-          controller: _scroll,
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-          itemCount: widget.messages.length,
-          itemBuilder: (_, i) {
-            final msg = widget.messages[i];
-            final isMe = msg.userId == SeedData.currentUser.id;
-            final sender = isMe ? SeedData.currentUser.name : (_memberFor(msg.userId)?.name ?? msg.userId);
-            return _Bubble(text: msg.text, time: msg.time, isMe: isMe, senderName: sender);
-          },
+        child: messagesAsync.when(
+          data: (messages) => ListView.builder(
+            controller: _scroll,
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+            itemCount: messages.length,
+            itemBuilder: (_, i) {
+              final msg = messages[i];
+              final isMe = msg.senderId == currentUserAsync.value?.id;
+              return _Bubble(text: msg.content, time: DateFormat('HH:mm').format(msg.sentAt), isMe: isMe, senderName: msg.senderName);
+            },
+          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, _) => Center(child: Text('Error: $err')),
         ),
       ),
 
@@ -549,7 +544,7 @@ class _ChatTabState extends State<_ChatTab> {
                 onSubmitted: (_) => _send(),
                 style: const TextStyle(fontSize: 14, color: AppColors.ink900),
                 decoration: const InputDecoration(
-                  hintText: 'Message #project',
+                  hintText: 'Message project',
                   hintStyle: TextStyle(color: AppColors.ink400, fontSize: 14),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -626,8 +621,6 @@ class _Bubble extends StatelessWidget {
     );
   }
 }
-
-// ── Shared small widgets ───────────────────────────────────────────────────────
 
 class _Tag extends StatelessWidget {
   final String label;

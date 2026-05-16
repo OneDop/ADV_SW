@@ -1,9 +1,12 @@
+import 'package:advsw/providers/auth_provider.dart';
 import 'package:advsw/providers/theme_provider.dart';
+import 'package:advsw/providers/user_provider.dart';
+import 'package:advsw/providers/project_provider.dart';
+import 'package:advsw/models/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:advsw/theme/app_theme.dart';
-import 'package:advsw/data/seed_data.dart';
 import 'package:advsw/screens/home/widgets.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -11,131 +14,156 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final u = SeedData.currentUser;
-    final myProjects = SeedData.projects.where((p) => p.members.any((m) => m.id == u.id)).toList();
+    final userProfileAsync = ref.watch(userProfileProvider);
+    final myProjectsAsync = ref.watch(myProjectsProvider);
     final isDark = ref.watch(themeProvider) == ThemeMode.dark;
     final theme = Theme.of(context);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            // Header
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Profile', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: theme.colorScheme.onSurface, letterSpacing: -0.4)),
-                    Row(children: [
-                      Switch(
-                        value: isDark,
-                        onChanged: (val) => ref.read(themeProvider.notifier).toggleTheme(),
-                        activeColor: AppColors.teal500,
-                      ),
-                      const SizedBox(width: 8),
-                      _HeaderBtn(icon: Icons.logout_rounded, onTap: () => context.go('/login')),
-                    ]),
-                  ],
+        child: userProfileAsync.when(
+          data: (u) => CustomScrollView(
+            slivers: [
+              // Header
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Profile', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: theme.colorScheme.onSurface, letterSpacing: -0.4)),
+                      Row(children: [
+                        Switch(
+                          value: isDark,
+                          onChanged: (val) => ref.read(themeProvider.notifier).toggleTheme(),
+                          activeColor: AppColors.teal500,
+                        ),
+                        const SizedBox(width: 8),
+                        _HeaderBtn(
+                          icon: Icons.logout_rounded, 
+                          onTap: () async {
+                            await ref.read(authProvider.notifier).logout();
+                            if (context.mounted) context.go('/login');
+                          },
+                        ),
+                      ]),
+                    ],
+                  ),
                 ),
               ),
-            ),
 
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
 
-                  // ── Hero card ────────────────────────────────────────────────
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(28),
-                      gradient: const LinearGradient(
-                        colors: [AppColors.teal700, AppColors.teal600],
-                        begin: Alignment.topLeft, end: Alignment.bottomRight,
+                    // ── Hero card ────────────────────────────────────────────────
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(28),
+                        gradient: const LinearGradient(
+                          colors: [AppColors.teal700, AppColors.teal600],
+                          begin: Alignment.topLeft, end: Alignment.bottomRight,
+                        ),
                       ),
-                    ),
-                    child: Stack(children: [
-                      Positioned(right: -60, top: -60,
-                        child: Container(width: 200, height: 200, decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(colors: [AppColors.aqua.withValues(alpha: 0.3), Colors.transparent]),
-                        ))),
-                      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Row(children: [
-                          UserAvatar(name: u.name, size: 68, status: u.status, ring: 3),
-                          const SizedBox(width: 16),
-                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text(u.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3)),
-                            const SizedBox(height: 2),
-                            Text(u.email, style: const TextStyle(fontSize: 11, color: Colors.white70)),
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(999)),
-                              child: Row(mainAxisSize: MainAxisSize.min, children: const [
-                                CircleAvatar(backgroundColor: Color(0xFF5BE6A4), radius: 3),
-                                SizedBox(width: 6),
-                                Text('Available', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
-                              ]),
+                      child: Stack(children: [
+                        Positioned(right: -60, top: -60,
+                          child: Container(width: 200, height: 200, decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(colors: [AppColors.aqua.withValues(alpha: 0.3), Colors.transparent]),
+                          ))),
+                        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Row(children: [
+                            UserAvatar(
+                              name: '${u.firstName} ${u.lastName}', 
+                              size: 68, 
+                              status: u.availabilityStatus.name, 
+                              imageUrl: u.profilePictureUrl,
+                              ring: 3
                             ),
-                          ])),
-                        ]),
-                        const SizedBox(height: 16),
-                        Text(u.bio, style: const TextStyle(fontSize: 13, color: Colors.white70, height: 1.5)),
-                        const SizedBox(height: 16),
-                        Row(children: [
-                          _HeroBtn(label: 'Edit profile', icon: Icons.edit_outlined, onTap: () {}),
-                          const SizedBox(width: 8),
-                          _HeroBtn(label: 'Share', icon: Icons.share_outlined, onTap: () {}, ghost: true),
+                            const SizedBox(width: 16),
+                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              Text('${u.firstName} ${u.lastName}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3)),
+                              const SizedBox(height: 2),
+                              Text(u.email, style: const TextStyle(fontSize: 11, color: Colors.white70)),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(999)),
+                                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                  CircleAvatar(
+                                    backgroundColor: u.availabilityStatus == AvailabilityStatus.AVAILABLE ? const Color(0xFF5BE6A4) : Colors.orange, 
+                                    radius: 3
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(u.availabilityStatus.name, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
+                                ]),
+                              ),
+                            ])),
+                          ]),
+                          const SizedBox(height: 16),
+                          Text(u.bio, style: const TextStyle(fontSize: 13, color: Colors.white70, height: 1.5)),
+                          const SizedBox(height: 16),
+                          Row(children: [
+                            _HeroBtn(label: 'Edit profile', icon: Icons.edit_outlined, onTap: () => context.push('/edit-profile')),
+                            const SizedBox(width: 8),
+                            _HeroBtn(label: 'Share', icon: Icons.share_outlined, onTap: () {}, ghost: true),
+                          ]),
                         ]),
                       ]),
-                    ]),
-                  ),
-
-                  // ── Stats ────────────────────────────────────────────────────
-                  const SizedBox(height: 16),
-                  Row(children: [
-                    _StatCard(icon: Icons.grid_view_rounded, value: '${myProjects.length}', label: 'Projects'),
-                    const SizedBox(width: 10),
-                    const _StatCard(icon: Icons.check_circle_outline_rounded, value: '84', label: 'Tasks done'),
-                    const SizedBox(width: 10),
-                    const _StatCard(icon: Icons.local_fire_department_rounded, value: '4d', label: 'Streak'),
-                  ]),
-
-                  // ── Skills ───────────────────────────────────────────────────
-                  SectionHeader(title: 'Skills', action: 'Edit', onAction: () {}),
-                  Wrap(
-                    spacing: 6, runSpacing: 8,
-                    children: u.skills.map((s) => _SkillTag(s, tone: 'accent')).toList(),
-                  ),
-
-                  // ── Experience ───────────────────────────────────────────────
-                  const SectionHeader(title: 'Experience'),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface, borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: isDark ? Colors.white10 : AppColors.lineSoft), boxShadow: isDark ? [] : AppTheme.shadowSm,
                     ),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(u.experience, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: theme.colorScheme.onSurface)),
-                      const SizedBox(height: 4),
-                      Text('Set your experience level so collaborators know what to expect.',
-                        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
-                    ]),
-                  ),
 
-                  // ── Past projects ────────────────────────────────────────────
-                  SectionHeader(title: 'Past projects', action: '+ Add', onAction: () {}),
-                  ...u.pastProjects.map((p) => _PastProjectRow(name: p)),
-                ]),
+                    // ── Stats ────────────────────────────────────────────────────
+                    const SizedBox(height: 16),
+                    Row(children: [
+                      myProjectsAsync.when(
+                        data: (projects) => _StatCard(icon: Icons.grid_view_rounded, value: '${projects.length}', label: 'Projects'),
+                        loading: () => const _StatCard(icon: Icons.grid_view_rounded, value: '...', label: 'Projects'),
+                        error: (_, __) => const _StatCard(icon: Icons.grid_view_rounded, value: '!', label: 'Projects'),
+                      ),
+                      const SizedBox(width: 10),
+                      const _StatCard(icon: Icons.check_circle_outline_rounded, value: '84', label: 'Tasks done'),
+                      const SizedBox(width: 10),
+                      const _StatCard(icon: Icons.local_fire_department_rounded, value: '4d', label: 'Streak'),
+                    ]),
+
+                    // ── Skills ───────────────────────────────────────────────────
+                    SectionHeader(title: 'Skills', action: 'Edit', onAction: () {}),
+                    Wrap(
+                      spacing: 6, runSpacing: 8,
+                      children: u.skills.map((s) => _SkillTag(s.skillName, tone: 'accent')).toList(),
+                    ),
+
+                    // ── Experience ───────────────────────────────────────────────
+                    SectionHeader(title: 'Experience', action: 'Update', onAction: () => context.push('/portfolio-update')),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface, borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: isDark ? Colors.white10 : AppColors.lineSoft), boxShadow: isDark ? [] : AppTheme.shadowSm,
+                      ),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('Profile Rating: ${u.averageRating}', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: theme.colorScheme.onSurface)),
+                        const SizedBox(height: 4),
+                        Text('Level: ${u.experienceLevel?.name ?? "Not set"}', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.teal700)),
+                        const SizedBox(height: 4),
+                        Text('Set your experience level so collaborators know what to expect.',
+                          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+                      ]),
+                    ),
+
+                    // ── Past projects ────────────────────────────────────────────
+                    SectionHeader(title: 'Past projects', action: '+ Add', onAction: () => context.push('/portfolio-update')),
+                    ...u.pastProjects.map((p) => _PastProjectRow(name: p.name)),
+                  ]),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, _) => Center(child: Text('Error: $err')),
         ),
       ),
     );

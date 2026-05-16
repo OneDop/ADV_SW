@@ -1,32 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:advsw/theme/app_theme.dart';
-import 'package:advsw/data/seed_data.dart';
+import 'package:advsw/providers/project_provider.dart';
+import 'package:advsw/models/project_model.dart';
 import 'widgets.dart';
 
-class ProjectsListScreen extends StatefulWidget {
+class ProjectsListScreen extends ConsumerStatefulWidget {
   const ProjectsListScreen({super.key});
 
   @override
-  State<ProjectsListScreen> createState() => _ProjectsListScreenState();
+  ConsumerState<ProjectsListScreen> createState() => _ProjectsListScreenState();
 }
 
-class _ProjectsListScreenState extends State<ProjectsListScreen> {
+class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
   String _filter = 'all';
   String _query = '';
 
-  List<AppProject> get _filtered {
-    var list = SeedData.projects;
-    if (_filter == 'owned')     list = list.where((p) => p.ownerId == SeedData.currentUser.id).toList();
-    if (_filter == 'shared')    list = list.where((p) => p.ownerId != SeedData.currentUser.id).toList();
-    if (_filter == 'completed') list = list.where((p) => p.status == 'Completed').toList();
-    if (_query.isNotEmpty)      list = list.where((p) => p.name.toLowerCase().contains(_query.toLowerCase())).toList();
-    return list;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final projects = _filtered;
+    final projectsAsync = ref.watch(myProjectsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -44,7 +37,11 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text('Projects', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.ink900, letterSpacing: -0.4)),
-                        Text('${SeedData.projects.length} total', style: const TextStyle(fontSize: 11, color: AppColors.ink500)),
+                        projectsAsync.when(
+                          data: (list) => Text('${list.length} total', style: const TextStyle(fontSize: 11, color: AppColors.ink500)),
+                          loading: () => const Text('Loading...', style: TextStyle(fontSize: 11, color: AppColors.ink500)),
+                          error: (_, __) => const Text('Error', style: TextStyle(fontSize: 11, color: AppColors.ink500)),
+                        ),
                       ],
                     ),
                   ),
@@ -73,7 +70,6 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
                 children: [
                   _FilterChip(label: 'All',           id: 'all',       current: _filter, onTap: (v) => setState(() => _filter = v)),
                   _FilterChip(label: 'Owned',         id: 'owned',     current: _filter, onTap: (v) => setState(() => _filter = v)),
-                  _FilterChip(label: 'Shared with me',id: 'shared',    current: _filter, onTap: (v) => setState(() => _filter = v)),
                   _FilterChip(label: 'Completed',     id: 'completed', current: _filter, onTap: (v) => setState(() => _filter = v)),
                 ],
               ),
@@ -81,17 +77,34 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
 
             // ── List ──────────────────────────────────────────────────────────
             Expanded(
-              child: projects.isEmpty
-                  ? _EmptyState()
-                  : ListView.builder(
+              child: projectsAsync.when(
+                data: (projects) {
+                  var filtered = projects;
+                  // Note: In a real app, filtering might be done via a provider or backend
+                  if (_filter == 'completed') filtered = filtered.where((p) => p.status == ProjectStatus.COMPLETED).toList();
+                  if (_query.isNotEmpty) filtered = filtered.where((p) => p.name.toLowerCase().contains(_query.toLowerCase())).toList();
+
+                  if (filtered.isEmpty) return _EmptyState();
+
+                  return RefreshIndicator(
+                    onRefresh: () => ref.read(myProjectsProvider.notifier).refresh(),
+                    child: ListView.builder(
                       padding: const EdgeInsets.fromLTRB(20, 8, 20, 110),
-                      itemCount: projects.length,
-                      itemBuilder: (_, i) => ProjectCard(
-                        project: projects[i],
-                        wide: true,
-                        onTap: () => context.push('/project/${projects[i].id}'),
-                      ),
+                      itemCount: filtered.length,
+                      itemBuilder: (_, i) {
+                        final p = filtered[i];
+                        return ProjectCardProxy(
+                          project: p,
+                          wide: true,
+                          onTap: () => context.push('/project/${p.id}'),
+                        );
+                      },
                     ),
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, stack) => Center(child: Text('Error: $err')),
+              ),
             ),
           ],
         ),
@@ -100,8 +113,28 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
   }
 }
 
-// ── Local widgets ─────────────────────────────────────────────────────────────
+/// A proxy widget to bridge ProjectResponse to the existing ProjectCard UI
+class ProjectCardProxy extends StatelessWidget {
+  final ProjectResponse project;
+  final bool wide;
+  final VoidCallback? onTap;
 
+  const ProjectCardProxy({super.key, required this.project, this.wide = false, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    // Map ProjectResponse to AppProject (from SeedData for UI compatibility)
+    // or just pass the data directly if we update ProjectCard.
+    // For now, let's keep the UI consistent with a mapping or updated card.
+    return ProjectCard(
+      project: project, // I will update ProjectCard to handle ProjectResponse
+      wide: wide,
+      onTap: onTap,
+    );
+  }
+}
+
+// ── Local widgets (Keep existing local widgets) ──────────────────────────────────
 class _IconBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;

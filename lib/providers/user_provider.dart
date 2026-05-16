@@ -20,6 +20,12 @@ class UserProfileNotifier extends AsyncNotifier<UserProfileResponse> {
     state = await AsyncValue.guard(() => ref.read(userServiceProvider).updateProfile(request));
   }
 
+  /// Update user's portfolio (Experience Level and Past Projects)
+  Future<void> updatePortfolio(UpdatePortfolioRequest request) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => ref.read(userServiceProvider).updatePortfolio(request));
+  }
+
   /// Change the current user's password
   Future<void> changePassword(ChangePasswordRequest request) async {
     await ref.read(userServiceProvider).changePassword(request);

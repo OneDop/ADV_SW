@@ -72,3 +72,39 @@ final browseProjectsProvider = AsyncNotifierProvider<BrowseProjectsNotifier, Lis
 final projectDetailsProvider = FutureProvider.family<ProjectResponse, int>((ref, id) {
   return ref.watch(projectServiceProvider).getProjectById(id);
 });
+
+/// AsyncNotifier to manage project members
+class ProjectMembersNotifier extends FamilyAsyncNotifier<List<ProjectMemberResponse>, int> {
+  @override
+  Future<List<ProjectMemberResponse>> build(int arg) {
+    return ref.watch(projectServiceProvider).getProjectMembers(arg);
+  }
+
+  /// Update a member's role and refresh the list
+  Future<void> updateMemberRole(int userId, UpdateMemberRoleRequest request) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      return await ref.read(projectServiceProvider).updateMemberRole(arg, userId, request);
+    });
+  }
+
+  /// Remove a member from the project
+  Future<void> removeMember(int userId) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(projectServiceProvider).removeMember(arg, userId);
+      return ref.read(projectServiceProvider).getProjectMembers(arg);
+    });
+  }
+
+  /// Refresh the members list
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => ref.read(projectServiceProvider).getProjectMembers(arg));
+  }
+}
+
+/// Provider for project members, indexed by project ID
+final projectMembersProvider = AsyncNotifierProviderFamily<ProjectMembersNotifier, List<ProjectMemberResponse>, int>(
+  ProjectMembersNotifier.new,
+);

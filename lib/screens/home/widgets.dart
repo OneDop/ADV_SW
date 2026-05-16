@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:advsw/theme/app_theme.dart';
-import 'package:advsw/data/seed_data.dart';
+import 'package:advsw/models/project_model.dart';
+import 'package:advsw/models/task_model.dart';
+import 'package:intl/intl.dart';
 
 // ── Avatar (initials fallback) ─────────────────────────────────────────────────
 class UserAvatar extends StatelessWidget {
@@ -8,6 +10,7 @@ class UserAvatar extends StatelessWidget {
   final double size;
   final String? status; // available | busy | offline | null
   final double ring;
+  final String? imageUrl;
 
   const UserAvatar({
     super.key,
@@ -15,6 +18,7 @@ class UserAvatar extends StatelessWidget {
     this.size = 40,
     this.status,
     this.ring = 0,
+    this.imageUrl,
   });
 
   static const _palettes = [
@@ -34,8 +38,9 @@ class UserAvatar extends StatelessWidget {
   }
 
   Color _statusColor() {
-    switch (status) {
-      case 'available': return const Color(0xFF3BB273);
+    switch (status?.toLowerCase()) {
+      case 'available':
+      case 'online':    return const Color(0xFF3BB273);
       case 'busy':      return const Color(0xFFE08D3C);
       default:          return const Color(0xFFA3ADB5);
     }
@@ -54,11 +59,12 @@ class UserAvatar extends StatelessWidget {
           width: size, height: size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(colors: pal, begin: Alignment.topLeft, end: Alignment.bottomRight),
+            gradient: imageUrl == null ? LinearGradient(colors: pal, begin: Alignment.topLeft, end: Alignment.bottomRight) : null,
+            image: imageUrl != null ? DecorationImage(image: NetworkImage(imageUrl!), fit: BoxFit.cover) : null,
             border: ring > 0 ? Border.all(color: isDark ? AppColors.darkSurface : Colors.white, width: ring) : null,
             boxShadow: ring > 0 ? [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4)] : null,
           ),
-          child: Center(
+          child: imageUrl == null ? Center(
             child: Text(initials.isEmpty ? '?' : initials,
               style: TextStyle(
                 fontSize: size * 0.36,
@@ -66,7 +72,7 @@ class UserAvatar extends StatelessWidget {
                 color: AppColors.ink900,
                 letterSpacing: -0.02 * size * 0.36,
               )),
-          ),
+          ) : null,
         ),
         if (status != null)
           Positioned(
@@ -87,7 +93,7 @@ class UserAvatar extends StatelessWidget {
 
 // ── Avatar stack ───────────────────────────────────────────────────────────────
 class AvatarStack extends StatelessWidget {
-  final List<ProjectMember> members;
+  final List<dynamic> members; // Can be ProjectMemberResponse or similar
   final double size;
   final int max;
 
@@ -104,10 +110,20 @@ class AvatarStack extends StatelessWidget {
       width: size + (shown.length - 1) * size * 0.7 + (extra > 0 ? size * 0.7 : 0),
       child: Stack(
         children: [
-          ...shown.asMap().entries.map((e) => Positioned(
-            left: e.key * size * 0.7,
-            child: UserAvatar(name: e.value.name, size: size, ring: 2),
-          )),
+          ...shown.asMap().entries.map((e) {
+            String name = 'User';
+            String? url;
+            if (e.value is ProjectMemberResponse) {
+              name = '${e.value.firstName} ${e.value.lastName}';
+              url = e.value.profilePictureUrl;
+            } else {
+              name = e.value.toString();
+            }
+            return Positioned(
+              left: e.key * size * 0.7,
+              child: UserAvatar(name: name, size: size, ring: 2, imageUrl: url),
+            );
+          }),
           if (extra > 0)
             Positioned(
               left: shown.length * size * 0.7,
@@ -182,7 +198,7 @@ class ProgressBar extends StatelessWidget {
 
 // ── Project card (horizontal scroll) ──────────────────────────────────────────
 class ProjectCard extends StatelessWidget {
-  final AppProject project;
+  final ProjectResponse project;
   final VoidCallback? onTap;
   final bool wide;
 
@@ -190,18 +206,24 @@ class ProjectCard extends StatelessWidget {
 
   Color get _statusBg {
     switch (project.status) {
-      case 'In Progress': return AppColors.warm100;
-      case 'Completed':   return AppColors.success100;
-      default:            return AppColors.teal50;
+      case ProjectStatus.IN_PROGRESS: return AppColors.warm100;
+      case ProjectStatus.COMPLETED:   return AppColors.success100;
+      case ProjectStatus.OPEN:        return AppColors.teal50;
+      case ProjectStatus.CANCELLED:   return AppColors.ink300;
     }
   }
 
   Color get _statusFg {
     switch (project.status) {
-      case 'In Progress': return AppColors.warm700;
-      case 'Completed':   return AppColors.success700;
-      default:            return AppColors.teal700;
+      case ProjectStatus.IN_PROGRESS: return AppColors.warm700;
+      case ProjectStatus.COMPLETED:   return AppColors.success700;
+      case ProjectStatus.OPEN:        return AppColors.teal700;
+      case ProjectStatus.CANCELLED:   return AppColors.ink700;
     }
+  }
+
+  String get _statusText {
+    return project.status.name.replaceAll('_', ' ');
   }
 
   @override
@@ -229,8 +251,8 @@ class ProjectCard extends StatelessWidget {
               children: [
                 Container(
                   width: 38, height: 38,
-                  decoration: BoxDecoration(color: isDark ? AppColors.teal900 : project.iconBg, borderRadius: BorderRadius.circular(12)),
-                  child: Icon(project.icon, size: 20, color: isDark ? AppColors.aqua : AppColors.teal700),
+                  decoration: BoxDecoration(color: isDark ? AppColors.teal900 : AppColors.teal50, borderRadius: BorderRadius.circular(12)),
+                  child: Icon(Icons.architecture, size: 20, color: isDark ? AppColors.aqua : AppColors.teal700),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -238,7 +260,7 @@ class ProjectCard extends StatelessWidget {
                     color: isDark ? _statusFg.withValues(alpha: 0.2) : _statusBg, 
                     borderRadius: BorderRadius.circular(999)
                   ),
-                  child: Text(project.status, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: isDark ? Colors.white : _statusFg)),
+                  child: Text(_statusText, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: isDark ? Colors.white : _statusFg)),
                 ),
               ],
             ),
@@ -256,23 +278,22 @@ class ProjectCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Progress', style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
-                Text('${(project.progress * 100).round()}%',
+                Text('Owner', style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                Text(project.ownerName,
                   style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: theme.colorScheme.onSurface)),
               ],
             ),
             const SizedBox(height: 6),
-            ProgressBar(value: project.progress),
+            const ProgressBar(value: 0.5), // Example progress
             if (wide) ...[
               const SizedBox(height: 14),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  AvatarStack(members: project.members, size: 24, max: 4),
                   Row(children: [
                     Icon(Icons.check_circle_outline, size: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
                     const SizedBox(width: 4),
-                    Text('${project.taskCounts.done}/${project.taskCounts.total} tasks',
+                    Text('Details',
                       style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
                   ]),
                 ],
@@ -287,7 +308,7 @@ class ProjectCard extends StatelessWidget {
 
 // ── Task row ───────────────────────────────────────────────────────────────────
 class TaskRow extends StatelessWidget {
-  final AppTask task;
+  final TaskResponse task;
   final VoidCallback? onToggle;
   final VoidCallback? onTap;
 
@@ -297,7 +318,7 @@ class TaskRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final done = task.status == 'done';
+    final done = task.status == TaskStatus.DONE;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -337,13 +358,13 @@ class TaskRow extends StatelessWidget {
                       decorationColor: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                     )),
                   const SizedBox(height: 2),
-                  Text('${task.due} · ${task.category}',
+                  Text('${DateFormat('MMM dd').format(task.deadline)} · ${task.status.name}',
                     style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
                 ],
               ),
             ),
-            if (task.assignees.isNotEmpty)
-              UserAvatar(name: task.assignees.first, size: 22),
+            if (task.assigneeName != null)
+              UserAvatar(name: task.assigneeName!, size: 22),
           ],
         ),
       ),

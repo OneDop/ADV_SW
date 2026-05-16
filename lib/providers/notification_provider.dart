@@ -20,6 +20,23 @@ class NotificationsNotifier extends AsyncNotifier<List<NotificationResponse>> {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => ref.read(notificationServiceProvider).getNotificationsForUser());
   }
+
+  /// Delete a specific notification
+  Future<void> deleteNotification(int id) async {
+    state = await AsyncValue.guard(() async {
+      await ref.read(notificationServiceProvider).deleteNotification(id);
+      final currentNotifications = state.value ?? [];
+      return currentNotifications.where((n) => n.id != id).toList();
+    });
+  }
+
+  /// Delete all notifications
+  Future<void> deleteAllNotifications() async {
+    state = await AsyncValue.guard(() async {
+      await ref.read(notificationServiceProvider).deleteAllNotifications();
+      return [];
+    });
+  }
 }
 
 /// Provider for the current user's notifications

@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiClient {
   late Dio dio;
-  static const String _tokenKey = 'auth_token';
+  static const String tokenKey = 'auth_token'; // Made public
   static const String _baseUrl = 'http://10.0.2.2:8080/api'; // Android Emulator local IP
 
   ApiClient() {
@@ -23,7 +23,7 @@ class ApiClient {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           final prefs = await SharedPreferences.getInstance();
-          final token = prefs.getString(_tokenKey);
+          final token = prefs.getString(tokenKey);
 
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
@@ -31,23 +31,38 @@ class ApiClient {
           return handler.next(options);
         },
         onError: (DioException e, handler) {
-          if (e.response?.statusCode == 401) {
-            // Handle unauthorized error (e.g., redirect to login or refresh token)
-            print('Unauthorized: 401');
+          String errorMessage = 'An unexpected error occurred.';
+          if (e.response != null && e.response?.data != null) {
+            if (e.response?.data is Map && e.response?.data.containsKey('message')) {
+              errorMessage = e.response?.data['message'];
+            } else if (e.response?.data is String) {
+              errorMessage = e.response?.data;
+            }
+          } else if (e.message != null) {
+            errorMessage = e.message!;
           }
+          print('Error: $errorMessage (Status: ${e.response?.statusCode})');
           return handler.next(e);
         },
       ),
     );
 
-    // Optional: Log interceptor for debugging
     dio.interceptors.add(LogInterceptor(
       requestBody: true,
       responseBody: true,
     ));
   }
 
-  // Generic request methods
+  Future<void> saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(tokenKey, token);
+  }
+
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(tokenKey);
+  }
+
   Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
     try {
       return await dio.get(path, queryParameters: queryParameters);

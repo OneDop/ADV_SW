@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:advsw/models/project_model.dart';
+import 'package:advsw/models/search_model.dart';
 import 'package:advsw/models/task_model.dart';
 import 'package:advsw/providers/chat_provider.dart';
 import 'package:advsw/providers/invitation_provider.dart';
@@ -7,6 +8,7 @@ import 'package:advsw/providers/project_provider.dart';
 import 'package:advsw/providers/task_provider.dart';
 import 'package:advsw/providers/user_provider.dart';
 import 'package:advsw/services/api_client.dart';
+import 'package:advsw/services/search_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -465,11 +467,7 @@ class _BoardView extends StatelessWidget {
             const SizedBox(height: 10),
             Expanded(
               child: ListView(
-                children: [
-                  ...tasks.map((t) => _KanbanCard(task: t, onAdvance: () => onAdvance(t))),
-                  const SizedBox(height: 6),
-                  _AddColumnBtn(onTap: () {}),
-                ],
+                  children: tasks.map((t) => _KanbanCard(task: t, onAdvance: () => onAdvance(t))).toList(),
               ),
             ),
           ]),
@@ -556,12 +554,23 @@ class _MembersTab extends ConsumerWidget {
               Text('Members (${members.length})',
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink900)),
               if (isOwner)
-                _AddBtn(
-                  label: 'Manage',
-                  onTap: () => context.push('/project/$projectId/manage-members')
-                )
+                Row(mainAxisSize: MainAxisSize.min, children: [
+                  _AddBtn(
+                    label: 'Invite',
+                    onTap: () => _showInviteSheet(context, projectId, ref, members)
+                  ),
+                  const SizedBox(width: 8),
+                  _AddBtn(
+                    label: 'Manage',
+                    onTap: () => context.push('/project/$projectId/manage-members')
+                  ),
+                ])
               else
-                _AddBtn(label: 'Invite', onTap: () => _showInviteSheet(context, projectId, ref)),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Text('Only the project owner can manage members',
+                    style: TextStyle(fontSize: 12, color: AppColors.ink400, fontStyle: FontStyle.italic)),
+                ),
             ]),
             const SizedBox(height: 14),
             ...members.map((m) => _MemberCard(
@@ -834,30 +843,6 @@ class _AddBtn extends StatelessWidget {
   }
 }
 
-class _AddColumnBtn extends StatelessWidget {
-  final VoidCallback onTap;
-  const _AddColumnBtn({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.ink300, width: 1.5, style: BorderStyle.solid),
-        ),
-        child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Icon(Icons.add_rounded, size: 14, color: AppColors.ink500),
-          SizedBox(width: 4),
-          Text('Add', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.ink500)),
-        ]),
-      ),
-    );
-  }
-}
-
 class _SegmentedToggle extends StatelessWidget {
   final String value;
   final List<(String, String)> options;
@@ -890,16 +875,113 @@ class _SegmentedToggle extends StatelessWidget {
   }
 }
 
-void _showInviteSheet(BuildContext context, int projectId, WidgetRef ref) {
-  final userIdCtrl = TextEditingController();
+void _showInviteSheet(BuildContext context, int projectId, WidgetRef ref, List<ProjectMemberResponse> existingMembers) {
+  final searchCtrl = TextEditingController();
+  final Set<int> existingMemberIds = existingMembers.map((m) => m.userId).toSet();
+
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (ctx) => Padding(
+    builder: (ctx) => _InviteSheetContent(
+      searchCtrl: searchCtrl,
+      projectId: projectId,
+      ref: ref,
+      existingMemberIds: existingMemberIds,
+    ),
+  );
+}
+
+class _InviteSheetContent extends StatefulWidget {
+  final TextEditingController searchCtrl;
+  final int projectId;
+  final WidgetRef ref;
+  final Set<int> existingMemberIds;
+
+  const _InviteSheetContent({
+    required this.searchCtrl,
+    required this.projectId,
+    required this.ref,
+    required this.existingMemberIds,
+  });
+
+  @override
+  State<_InviteSheetContent> createState() => _InviteSheetContentState();
+}
+
+class _InviteSheetContentState extends State<_InviteSheetContent> {
+  List<SearchUserResult> _results = [];
+  bool _searching = false;
+  Timer? _debounce;
+  String? _error;
+
+  void _onSearchChanged(String query) {
+    _debounce?.cancel();
+    if (query.trim().isEmpty) {
+      setState(() { _results = []; _searching = false; _error = null; });
+      return;
+    }
+    setState(() => _searching = true);
+    _debounce = Timer(const Duration(milliseconds: 400), () async {
+      try {
+        final results = await SearchService().searchUsersByName(query.trim());
+        if (!mounted) return;
+        setState(() {
+          _results = results.where((u) => !widget.existingMemberIds.contains(u.id)).toList();
+          _searching = false;
+          _error = null;
+        });
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          _results = [];
+          _searching = false;
+          _error = e.toString();
+        });
+      }
+    });
+  }
+
+  Future<void> _inviteUser(SearchUserResult user) async {
+    try {
+      await widget.ref.read(projectJoinRequestsProvider(widget.projectId).notifier).sendInvite(user.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Invitation sent to ${user.firstName} ${user.lastName}'),
+          backgroundColor: AppColors.teal700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      setState(() => _results.removeWhere((u) => u.id == user.id));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to invite: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    widget.searchCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -910,39 +992,103 @@ void _showInviteSheet(BuildContext context, int projectId, WidgetRef ref) {
           children: [
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               const Text('Invite Member', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink900)),
-              GestureDetector(onTap: () => Navigator.pop(ctx),
+              GestureDetector(onTap: () => Navigator.pop(context),
                 child: const Icon(Icons.close_rounded, color: AppColors.ink500)),
             ]),
             const SizedBox(height: 8),
-            const Text('Enter the user ID of the person you want to invite.',
+            const Text('Search users by name to invite them to this project.',
               style: TextStyle(fontSize: 12, color: AppColors.ink500)),
-            const SizedBox(height: 20),
-            _SheetField(label: 'USER ID', hint: 'e.g. 42', controller: userIdCtrl),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  final receiverId = int.tryParse(userIdCtrl.text.trim());
-                  if (receiverId == null) return;
-                  Navigator.pop(ctx);
-                  await ref.read(projectJoinRequestsProvider(projectId).notifier).sendInvite(receiverId);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.teal700,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  elevation: 0,
-                ),
-                child: const Text('Send Invitation', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 16),
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.bgAlt, borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.line),
               ),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Row(children: [
+                const Icon(Icons.search_rounded, size: 20, color: AppColors.ink400),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: widget.searchCtrl,
+                    onChanged: _onSearchChanged,
+                    style: const TextStyle(fontSize: 14, color: AppColors.ink900),
+                    decoration: const InputDecoration(
+                      hintText: 'Search by name...',
+                      hintStyle: TextStyle(color: AppColors.ink400, fontSize: 14),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ]),
             ),
+            const SizedBox(height: 12),
+            if (_searching)
+              const Center(child: Padding(
+                padding: EdgeInsets.all(20),
+                child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
+              ))
+            else if (_error != null)
+              Center(child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(_error!, style: const TextStyle(fontSize: 13, color: Colors.red)),
+              ))
+            else if (widget.searchCtrl.text.trim().isEmpty)
+              const Center(child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text('Type a name to search', style: TextStyle(fontSize: 13, color: AppColors.ink400)),
+              ))
+            else if (_results.isEmpty)
+              const Center(child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text('No users found', style: TextStyle(fontSize: 13, color: AppColors.ink400)),
+              ))
+            else
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: _results.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.lineSoft),
+                  itemBuilder: (_, i) {
+                    final user = _results[i];
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: UserAvatar(
+                        name: '${user.firstName} ${user.lastName}',
+                        size: 40,
+                        imageUrl: ApiClient.buildImageUrl(user.profilePictureUrl),
+                      ),
+                      title: Text('${user.firstName} ${user.lastName}',
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink900)),
+                      subtitle: Text(user.email,
+                        style: const TextStyle(fontSize: 12, color: AppColors.ink500)),
+                      trailing: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          gradient: AppTheme.primaryGradient,
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(10),
+                            onTap: () => _inviteUser(user),
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              child: Text('Invite', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
           ],
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _SheetField extends StatelessWidget {

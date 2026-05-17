@@ -40,7 +40,6 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 16),
-                // Logo + branding
                 const AppLogo(size: 60),
                 const SizedBox(height: 14),
                 const Text(
@@ -102,7 +101,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Remember me
                       GestureDetector(
                         onTap: () => setState(() => _remember = !_remember),
                         child: Row(
@@ -133,7 +131,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // OR divider
                       Row(
                         children: [
                           const Expanded(child: Divider(color: AppColors.line)),
@@ -157,7 +154,35 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 28),
+                const SizedBox(height: 20),
+
+                // ── Admin panel test button ──────────────────────────────────
+                GestureDetector(
+                  onTap: () => context.push('/admin'),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: AppColors.line),
+                      boxShadow: AppTheme.shadowSm,
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.admin_panel_settings_outlined, size: 18, color: AppColors.ink500),
+                        SizedBox(width: 8),
+                        Text(
+                          'Admin Panel (Test)',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink500),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

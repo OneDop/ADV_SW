@@ -56,6 +56,30 @@ class AppTheme {
     ),
   );
 
+  static ThemeData get darkTheme => ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: AppColors.teal500,
+      primary: AppColors.teal500,
+      surface: const Color(0xFF0F1F24),
+      brightness: Brightness.dark,
+    ),
+    scaffoldBackgroundColor: const Color(0xFF0F1F24),
+    fontFamily: 'Manrope',
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color(0xFF0F1F24),
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      foregroundColor: Colors.white,
+    ),
+    cardColor: const Color(0xFF162A32),
+    dialogTheme: const DialogThemeData(backgroundColor: Color(0xFF162A32)),
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: Color(0xFF162A32),
+    ),
+  );
+
   // Gradient helpers
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [AppColors.teal700, AppColors.teal500],

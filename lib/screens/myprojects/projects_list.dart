@@ -24,6 +24,96 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
     return list;
   }
 
+  void _showCreateDialog() {
+    final nameCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(child: Container(width: 36, height: 4, decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(2)))),
+              const SizedBox(height: 20),
+              const Text('New Project', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink900)),
+              const SizedBox(height: 20),
+              _SheetField(label: 'PROJECT NAME', hint: 'Give it a name…', controller: nameCtrl),
+              const SizedBox(height: 14),
+              _SheetField(label: 'DESCRIPTION', hint: 'What is it about? (optional)', controller: descCtrl, maxLines: 3),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: GestureDetector(
+                  onTap: () {
+                    final name = nameCtrl.text.trim();
+                    if (name.isEmpty) return;
+                    final u = SeedData.currentUser;
+                    SeedData.projects.add(AppProject(
+                      id: 'p${DateTime.now().millisecondsSinceEpoch}',
+                      name: name,
+                      description: descCtrl.text.trim(),
+                      icon: Icons.folder_rounded,
+                      iconBg: AppColors.teal50,
+                      progress: 0,
+                      status: 'Planning',
+                      tags: [],
+                      ownerId: u.id,
+                      members: [ProjectMember(id: u.id, name: u.name, role: 'Owner', status: 'active')],
+                      taskCounts: const TaskCounts(todo: 0, progress: 0, done: 0),
+                    ));
+                    setState(() {});
+                    Navigator.of(ctx).pop();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      gradient: AppTheme.primaryGradient,
+                    ),
+                    child: const Text('Create Project', textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _confirmDelete(AppProject project) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Delete project?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+        content: Text('Remove "${project.name}" permanently?', style: const TextStyle(fontSize: 13, color: AppColors.ink500)),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () {
+              SeedData.projects.remove(project);
+              setState(() {});
+              Navigator.of(ctx).pop();
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final projects = _filtered;
@@ -50,7 +140,7 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
                   ),
                   _IconBtn(icon: Icons.filter_list_rounded, onTap: () {}),
                   const SizedBox(width: 8),
-                  _FilledIconBtn(icon: Icons.add_rounded, onTap: () {}),
+                  _FilledIconBtn(icon: Icons.add_rounded, onTap: _showCreateDialog),
                 ],
               ),
             ),
@@ -90,6 +180,7 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
                         project: projects[i],
                         wide: true,
                         onTap: () => context.push('/project/${projects[i].id}'),
+                        onLongPress: () => _confirmDelete(projects[i]),
                       ),
                     ),
             ),
@@ -202,6 +293,43 @@ class _FilterChip extends StatelessWidget {
         child: Text(label,
           style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: sel ? Colors.white : AppColors.ink700)),
       ),
+    );
+  }
+}
+
+class _SheetField extends StatelessWidget {
+  final String label;
+  final String hint;
+  final TextEditingController controller;
+  final int maxLines;
+  const _SheetField({required this.label, required this.hint, required this.controller, this.maxLines = 1});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: AppColors.ink500)),
+        const SizedBox(height: 6),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.bgAlt,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.line),
+          ),
+          child: TextField(
+            controller: controller,
+            maxLines: maxLines,
+            style: const TextStyle(fontSize: 14, color: AppColors.ink900),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: const TextStyle(color: AppColors.ink400, fontSize: 14),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:advsw/theme/app_theme.dart';
 import 'package:advsw/data/seed_data.dart';
+import 'package:advsw/theme/theme_manager.dart';
 import 'package:advsw/screens/home/widgets.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -9,127 +10,145 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final u = SeedData.currentUser;
-    final myProjects = SeedData.projects.where((p) => p.members.any((m) => m.id == u.id)).toList();
+    return ListenableBuilder(
+      listenable: Listenable.merge([SeedData.profileNotifier, ThemeManager.instance]),
+      builder: (context, _) {
+        final eu = SeedData.editableUser;
+        final cu = SeedData.currentUser;
+        final myProjects = SeedData.projects.where((p) => p.members.any((m) => m.id == cu.id)).toList();
 
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            // Header
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Profile', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.ink900, letterSpacing: -0.4)),
-                    Row(children: [
-                      _HeaderBtn(icon: Icons.settings_outlined, onTap: () {}),
-                      const SizedBox(width: 8),
-                      _HeaderBtn(icon: Icons.logout_rounded, onTap: () => context.go('/login')),
-                    ]),
-                  ],
-                ),
-              ),
-            ),
+        final statusColor = eu.status == 'available'
+            ? const Color(0xFF3BB273)
+            : eu.status == 'busy'
+                ? AppColors.warm600
+                : AppColors.ink400;
+        final statusLabel = eu.status[0].toUpperCase() + eu.status.substring(1);
 
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-
-                  // ── Hero card ────────────────────────────────────────────────
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(28),
-                      gradient: const LinearGradient(
-                        colors: [AppColors.teal700, AppColors.teal600],
-                        begin: Alignment.topLeft, end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: Stack(children: [
-                      Positioned(right: -60, top: -60,
-                        child: Container(width: 200, height: 200, decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(colors: [AppColors.aqua.withValues(alpha: 0.3), Colors.transparent]),
-                        ))),
-                      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        return Scaffold(
+          backgroundColor: AppColors.bg,
+          body: SafeArea(
+            child: CustomScrollView(
+              slivers: [
+                // Header
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Profile', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.ink900, letterSpacing: -0.4)),
                         Row(children: [
-                          UserAvatar(name: u.name, size: 68, status: u.status, ring: 3),
-                          const SizedBox(width: 16),
-                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text(u.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3)),
-                            const SizedBox(height: 2),
-                            Text(u.email, style: const TextStyle(fontSize: 11, color: Colors.white70)),
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(999)),
-                              child: Row(mainAxisSize: MainAxisSize.min, children: const [
-                                CircleAvatar(backgroundColor: Color(0xFF5BE6A4), radius: 3),
-                                SizedBox(width: 6),
-                                Text('Available', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
-                              ]),
-                            ),
-                          ])),
-                        ]),
-                        const SizedBox(height: 16),
-                        Text(u.bio, style: const TextStyle(fontSize: 13, color: Colors.white70, height: 1.5)),
-                        const SizedBox(height: 16),
-                        Row(children: [
-                          _HeroBtn(label: 'Edit profile', icon: Icons.edit_outlined, onTap: () {}),
+                          _HeaderBtn(
+                            icon: ThemeManager.instance.isDark ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
+                            onTap: () => ThemeManager.instance.toggle(),
+                          ),
                           const SizedBox(width: 8),
-                          _HeroBtn(label: 'Share', icon: Icons.share_outlined, onTap: () {}, ghost: true),
+                          _HeaderBtn(icon: Icons.logout_rounded, onTap: () => context.go('/login')),
                         ]),
-                      ]),
-                    ]),
-                  ),
-
-                  // ── Stats ────────────────────────────────────────────────────
-                  const SizedBox(height: 16),
-                  Row(children: [
-                    _StatCard(icon: Icons.grid_view_rounded, value: '${myProjects.length}', label: 'Projects'),
-                    const SizedBox(width: 10),
-                    const _StatCard(icon: Icons.check_circle_outline_rounded, value: '84', label: 'Tasks done'),
-                    const SizedBox(width: 10),
-                    const _StatCard(icon: Icons.local_fire_department_rounded, value: '4d', label: 'Streak'),
-                  ]),
-
-                  // ── Skills ───────────────────────────────────────────────────
-                  SectionHeader(title: 'Skills', action: 'Edit', onAction: () {}),
-                  Wrap(
-                    spacing: 6, runSpacing: 8,
-                    children: u.skills.map((s) => _SkillTag(s, tone: 'accent')).toList(),
-                  ),
-
-                  // ── Experience ───────────────────────────────────────────────
-                  const SectionHeader(title: 'Experience'),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white, borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: AppColors.lineSoft), boxShadow: AppTheme.shadowSm,
+                      ],
                     ),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(u.experience, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.ink900)),
-                      const SizedBox(height: 4),
-                      const Text('Set your experience level so collaborators know what to expect.',
-                        style: TextStyle(fontSize: 12, color: AppColors.ink500)),
+                  ),
+                ),
+
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+
+                      // ── Hero card ────────────────────────────────────────────────
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(28),
+                          gradient: const LinearGradient(
+                            colors: [AppColors.teal700, AppColors.teal600],
+                            begin: Alignment.topLeft, end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: Stack(children: [
+                          Positioned(right: -60, top: -60,
+                            child: Container(width: 200, height: 200, decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(colors: [AppColors.aqua.withValues(alpha: 0.3), Colors.transparent]),
+                            ))),
+                          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Row(children: [
+                              UserAvatar(name: eu.name, size: 68, status: eu.status, ring: 3),
+                              const SizedBox(width: 16),
+                              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                Text(eu.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3)),
+                                const SizedBox(height: 2),
+                                Text(cu.email, style: const TextStyle(fontSize: 11, color: Colors.white70)),
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(999)),
+                                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                    CircleAvatar(backgroundColor: statusColor, radius: 3),
+                                    const SizedBox(width: 6),
+                                    Text(statusLabel, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
+                                  ]),
+                                ),
+                              ])),
+                            ]),
+                            if (eu.bio.isNotEmpty) ...[
+                              const SizedBox(height: 16),
+                              Text(eu.bio, style: const TextStyle(fontSize: 13, color: Colors.white70, height: 1.5)),
+                            ],
+                            const SizedBox(height: 16),
+                            Row(children: [
+                              _HeroBtn(label: 'Edit profile', icon: Icons.edit_outlined, onTap: () => context.push('/edit-profile')),
+                              const SizedBox(width: 8),
+                              _HeroBtn(label: 'Share', icon: Icons.share_outlined, onTap: () {}, ghost: true),
+                            ]),
+                          ]),
+                        ]),
+                      ),
+
+                      // ── Stats ────────────────────────────────────────────────────
+                      const SizedBox(height: 16),
+                      Row(children: [
+                        _StatCard(icon: Icons.grid_view_rounded, value: '${myProjects.length}', label: 'Projects'),
+                        const SizedBox(width: 10),
+                        const _StatCard(icon: Icons.check_circle_outline_rounded, value: '84', label: 'Tasks done'),
+                        const SizedBox(width: 10),
+                        const _StatCard(icon: Icons.local_fire_department_rounded, value: '4d', label: 'Streak'),
+                      ]),
+
+                      // ── Skills ───────────────────────────────────────────────────
+                      SectionHeader(title: 'Skills', action: 'Edit', onAction: () => context.push('/edit-profile')),
+                      Wrap(
+                        spacing: 6, runSpacing: 8,
+                        children: eu.skills.map((s) => _SkillTag(s, tone: 'accent')).toList(),
+                      ),
+
+                      // ── Experience ───────────────────────────────────────────────
+                      const SectionHeader(title: 'Experience'),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white, borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: AppColors.lineSoft), boxShadow: AppTheme.shadowSm,
+                        ),
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(eu.experience, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.ink900)),
+                          const SizedBox(height: 4),
+                          const Text('Set your experience level so collaborators know what to expect.',
+                            style: TextStyle(fontSize: 12, color: AppColors.ink500)),
+                        ]),
+                      ),
+
+                      // ── Past projects ────────────────────────────────────────────
+                      SectionHeader(title: 'Past projects', action: '+ Add', onAction: () => context.push('/edit-profile')),
+                      ...eu.pastProjects.map((p) => _PastProjectRow(name: p)),
                     ]),
                   ),
-
-                  // ── Past projects ────────────────────────────────────────────
-                  SectionHeader(title: 'Past projects', action: '+ Add', onAction: () {}),
-                  ...u.pastProjects.map((p) => _PastProjectRow(name: p)),
-                ]),
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

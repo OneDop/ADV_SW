@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:advsw/theme/app_theme.dart';
 import 'package:advsw/data/seed_data.dart';
 import 'package:advsw/screens/home/widgets.dart';
@@ -213,32 +214,42 @@ class _UserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white, borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.lineSoft), boxShadow: AppTheme.shadowMd,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            UserAvatar(name: user.name, size: 44, status: user.status),
-            const SizedBox(width: 12),
-            Expanded(child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(user.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.ink900)),
-                Text(user.role, style: const TextStyle(fontSize: 11, color: AppColors.ink500)),
-              ],
-            )),
-            _InviteBtn(onTap: () {}),
-          ]),
-          const SizedBox(height: 12),
-          Wrap(spacing: 5, runSpacing: 6,
-            children: user.skills.map((s) => _SkillTag(s)).toList()),
-        ],
+    return GestureDetector(
+      onTap: () => context.push('/user/${user.id}'),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white, borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.lineSoft), boxShadow: AppTheme.shadowMd,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              UserAvatar(name: user.name, size: 44, status: user.status),
+              const SizedBox(width: 12),
+              Expanded(child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(user.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.ink900)),
+                  Text(user.role, style: const TextStyle(fontSize: 11, color: AppColors.ink500)),
+                ],
+              )),
+              _InviteBtn(onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Invitation sent to ${user.name}'),
+                  backgroundColor: AppColors.teal700,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              )),
+            ]),
+            const SizedBox(height: 12),
+            Wrap(spacing: 5, runSpacing: 6,
+              children: user.skills.map((s) => _SkillTag(s)).toList()),
+          ],
+        ),
       ),
     );
   }
@@ -313,7 +324,14 @@ class _ProjectDiscoverCard extends StatelessWidget {
           Text('${project.members} members', style: const TextStyle(fontSize: 10, color: AppColors.ink500)),
           const SizedBox(height: 8),
           GestureDetector(
-            onTap: () {},
+            onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Request sent to join ${project.name}'),
+                backgroundColor: AppColors.teal700,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
               decoration: BoxDecoration(

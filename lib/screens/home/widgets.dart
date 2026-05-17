@@ -179,9 +179,10 @@ class ProgressBar extends StatelessWidget {
 class ProjectCard extends StatelessWidget {
   final AppProject project;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final bool wide;
 
-  const ProjectCard({super.key, required this.project, this.onTap, this.wide = false});
+  const ProjectCard({super.key, required this.project, this.onTap, this.onLongPress, this.wide = false});
 
   Color get _statusBg {
     switch (project.status) {
@@ -203,6 +204,7 @@ class ProjectCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       child: Container(
         width: wide ? null : 220,
         margin: EdgeInsets.only(right: wide ? 0 : 12, bottom: wide ? 12 : 0),

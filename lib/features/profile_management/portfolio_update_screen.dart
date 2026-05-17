@@ -146,7 +146,7 @@ class _PortfolioUpdateScreenState extends ConsumerState<PortfolioUpdateScreen> {
               child: Column(
                 children: [
                   DropdownButtonFormField<ExperienceLevel>(
-                    value: _experienceLevel,
+                    initialValue: _experienceLevel,
                     items: ExperienceLevel.values.map((level) {
                       return DropdownMenuItem(
                         value: level,

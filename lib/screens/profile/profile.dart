@@ -96,17 +96,22 @@ class ProfileScreen extends ConsumerWidget {
                               const SizedBox(height: 2),
                               Text(u.email, style: const TextStyle(fontSize: 11, color: Colors.white70)),
                               const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(999)),
-                                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                                  CircleAvatar(
-                                    backgroundColor: u.availabilityStatus == AvailabilityStatus.AVAILABLE ? const Color(0xFF5BE6A4) : Colors.orange, 
-                                    radius: 3
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(u.availabilityStatus.name, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
-                                ]),
+                              GestureDetector(
+                                onTap: () => _showAvailabilityPicker(context, ref, u.availabilityStatus),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(999)),
+                                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                    CircleAvatar(
+                                      backgroundColor: u.availabilityStatus == AvailabilityStatus.AVAILABLE ? const Color(0xFF5BE6A4) : Colors.orange, 
+                                      radius: 3
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(u.availabilityStatus.name, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
+                                    const SizedBox(width: 4),
+                                    const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: Colors.white70),
+                                  ]),
+                                ),
                               ),
                             ])),
                           ]),
@@ -137,10 +142,13 @@ class ProfileScreen extends ConsumerWidget {
                     ]),
 
                     // ── Skills ───────────────────────────────────────────────────
-                    SectionHeader(title: 'Skills', action: 'Edit', onAction: () {}),
+                    SectionHeader(title: 'Skills', action: 'Edit', onAction: () => context.push('/skills-management')),
                     Wrap(
                       spacing: 6, runSpacing: 8,
-                      children: u.skills.map((s) => _SkillTag(s.skillName, tone: 'accent')).toList(),
+                      children: u.skills.map((s) => _SkillTag(
+                        '${s.skillName} (${_formatExperienceLevel(s.experienceLevel)})',
+                        tone: 'accent',
+                      )).toList(),
                     ),
 
                     // ── Experience ───────────────────────────────────────────────
@@ -307,4 +315,76 @@ class _PastProjectRow extends StatelessWidget {
       ]),
     );
   }
+}
+
+String _formatExperienceLevel(ExperienceLevel level) {
+  switch (level) {
+    case ExperienceLevel.BEGINNER:
+      return 'Beginner';
+    case ExperienceLevel.INTERMEDIATE:
+      return 'Intermediate';
+    case ExperienceLevel.ADVANCED:
+      return 'Advanced';
+    case ExperienceLevel.PROFESSIONAL:
+      return 'Professional';
+  }
+}
+
+void _showAvailabilityPicker(BuildContext context, WidgetRef ref, AvailabilityStatus currentStatus) {
+  showModalBottomSheet(
+    context: context,
+    builder: (context) => Container(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Update Status',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 16),
+          ...AvailabilityStatus.values.map((status) {
+            final isSelected = currentStatus == status;
+            return ListTile(
+              leading: Icon(
+                status == AvailabilityStatus.AVAILABLE
+                    ? Icons.check_circle_outline
+                    : Icons.pause_circle_outline,
+                color: isSelected ? AppColors.teal700 : AppColors.ink500,
+              ),
+              title: Text(
+                status.name[0] + status.name.substring(1).toLowerCase(),
+                style: TextStyle(
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.normal,
+                  color: isSelected ? AppColors.teal700 : null,
+                ),
+              ),
+              trailing: isSelected ? const Icon(Icons.check_rounded, color: AppColors.teal700) : null,
+              onTap: () async {
+                Navigator.pop(context);
+                try {
+                  final profile = ref.read(userProfileProvider).value;
+                  if (profile != null) {
+                    final request = UpdateProfileRequest(
+                      firstName: profile.firstName,
+                      lastName: profile.lastName,
+                      bio: profile.bio,
+                      availabilityStatus: status,
+                    );
+                    await ref.read(userProfileProvider.notifier).updateProfile(request);
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to update status: $e'), backgroundColor: Colors.red),
+                    );
+                  }
+                }
+              },
+            );
+          }),
+        ],
+      ),
+    ),
+  );
 }

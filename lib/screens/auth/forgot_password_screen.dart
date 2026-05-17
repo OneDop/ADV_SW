@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:advsw/theme/app_theme.dart';
@@ -16,6 +17,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _emailCtrl = TextEditingController();
   bool _sent = false;
   String? _error;
+  String? _message;
+  String? _resetToken;
 
   @override
   void dispose() {
@@ -24,18 +27,26 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   Future<void> _submit() async {
-    setState(() => _error = null);
+    setState(() {
+      _error = null;
+      _message = null;
+      _resetToken = null;
+    });
     final email = _emailCtrl.text.trim();
     if (email.isEmpty) {
       setState(() => _error = 'Email is required.');
       return;
     }
 
-    final success = await ref.read(authProvider.notifier).forgotPassword(email);
+    final result = await ref.read(authProvider.notifier).forgotPassword(email);
     if (!mounted) return;
 
-    if (success) {
-      setState(() => _sent = true);
+    if (result != null) {
+      setState(() {
+        _sent = true;
+        _message = result['message'] as String? ?? 'Password reset token generated. Use it within 15 minutes.';
+        _resetToken = result['resetToken'] as String?;
+      });
     } else {
       setState(() => _error = 'Failed to send reset link. Please try again.');
     }
@@ -124,7 +135,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         const SizedBox(height: 16),
         Center(
           child: GestureDetector(
-            onTap: () => context.pop(),
+            onTap: () => context.go('/login'),
             child: const Text('Back to sign in',
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.teal700)),
           ),
@@ -145,11 +156,77 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         const Text('Check your inbox',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink900)),
         const SizedBox(height: 8),
-        const Text("We've sent a password reset link to your email. It expires in 15 minutes.",
+        Text(
+          _message ?? "We've sent a password reset link to your email. It expires in 15 minutes.",
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 13, color: AppColors.ink500, height: 1.5)),
-        const SizedBox(height: 24),
-        PrimaryBtn(label: 'Back to sign in', onPressed: () => context.go('/login')),
+          style: const TextStyle(fontSize: 13, color: AppColors.ink500, height: 1.5),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.bgAlt,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.line),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Your reset token:',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.ink500, letterSpacing: 0.5),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _resetToken ?? 'Token will appear here',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.ink900,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                  ),
+                  if (_resetToken != null)
+                    GestureDetector(
+                      onTap: () {
+                        Clipboard.setData(ClipboardData(text: _resetToken!));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Token copied to clipboard'), duration: Duration(seconds: 2)),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppColors.teal50,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.copy_rounded, size: 16, color: AppColors.teal700),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        PrimaryBtn(
+          label: 'Reset password',
+          trailing: Icons.lock_reset_rounded,
+          onPressed: () => context.push('/reset-password'),
+        ),
+        const SizedBox(height: 12),
+        Center(
+          child: GestureDetector(
+            onTap: () => context.go('/login'),
+            child: const Text('Back to sign in',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.teal700)),
+          ),
+        ),
       ],
     );
   }

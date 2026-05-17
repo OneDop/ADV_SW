@@ -12,7 +12,6 @@ enum Role {
 
 enum AvailabilityStatus {
   AVAILABLE,
-  BUSY,
   AWAY,
 }
 

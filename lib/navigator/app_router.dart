@@ -6,7 +6,9 @@ import 'package:advsw/features/profile_management/portfolio_update_screen.dart';
 import 'package:advsw/features/project_management/project_members_screen.dart';
 import 'package:advsw/features/project_management/member_management_screen.dart';
 import 'package:advsw/features/search/global_search_screen.dart';
+import 'package:advsw/features/skills_management/skills_management_screen.dart';
 import 'package:advsw/screens/auth/forgot_password_screen.dart';
+import 'package:advsw/screens/auth/reset_password_screen.dart';
 import 'package:advsw/screens/myprojects/projects_list.dart';
 import 'package:advsw/screens/projectInfo/project_info.dart';
 import 'package:flutter/material.dart';
@@ -25,7 +27,8 @@ final router = GoRouter(
     final isLoggedIn = await authService.isLoggedIn();
     final isAuthRoute = state.matchedLocation == '/login' ||
         state.matchedLocation == '/signup' ||
-        state.matchedLocation == '/forgot-password';
+        state.matchedLocation == '/forgot-password' ||
+        state.matchedLocation == '/reset-password';
 
     if (!isLoggedIn && !isAuthRoute) {
       return '/login';
@@ -49,6 +52,10 @@ final router = GoRouter(
       builder: (context, state) => const ForgotPasswordScreen(),
     ),
     GoRoute(
+      path: '/reset-password',
+      builder: (context, state) => const ResetPasswordScreen(),
+    ),
+    GoRoute(
       path: '/admin',
       builder: (context, state) => const AdminScreen(),
     ),
@@ -60,6 +67,10 @@ final router = GoRouter(
       path: '/portfolio-update',
       name: 'portfolio-update',
       builder: (context, state) => const PortfolioUpdateScreen(),
+    ),
+    GoRoute(
+      path: '/skills-management',
+      builder: (context, state) => const SkillsManagementScreen(),
     ),
     GoRoute(
       path: '/my-projects',

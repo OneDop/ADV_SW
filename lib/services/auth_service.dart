@@ -8,6 +8,9 @@ class AuthService {
 
   Future<bool> login(String email, String password) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_tokenKey);
+
       final request = AuthenticationRequest(email: email, password: password);
       final response = await _apiClient.post('/auth/authenticate', data: request.toJson());
 
@@ -15,7 +18,6 @@ class AuthService {
         final authResponse = AuthenticationResponse.fromJson(response.data);
         final token = authResponse.token;
         
-        final prefs = await SharedPreferences.getInstance();
         await prefs.setString(_tokenKey, token);
         return true;
       }
@@ -32,6 +34,9 @@ class AuthService {
     required String password,
   }) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_tokenKey);
+
       final request = RegisterRequest(
         firstName: firstName,
         lastName: lastName,
@@ -44,7 +49,6 @@ class AuthService {
         final authResponse = AuthenticationResponse.fromJson(response.data);
         final token = authResponse.token;
         
-        final prefs = await SharedPreferences.getInstance();
         await prefs.setString(_tokenKey, token);
         return true;
       }
@@ -54,13 +58,16 @@ class AuthService {
     }
   }
 
-  Future<bool> forgotPassword(String email) async {
+  Future<Map<String, dynamic>?> forgotPassword(String email) async {
     try {
       final request = ForgotPasswordRequest(email: email);
       final response = await _apiClient.post('/auth/forgot-password', data: request.toJson());
-      return response.statusCode == 200;
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      }
+      return null;
     } catch (e) {
-      return false;
+      return null;
     }
   }
 
@@ -75,15 +82,13 @@ class AuthService {
   }
 
   Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tokenKey);
+
     try {
-      // Call backend to invalidate the session/token
       await _apiClient.post('/auth/logout');
     } catch (e) {
-      // If logout fails (e.g. token already expired), we still clear local data
-      print("Backend logout failed: $e");
-    } finally {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_tokenKey);
+      print("Backend logout notification failed: $e");
     }
   }
 

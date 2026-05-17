@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:advsw/services/auth_service.dart';
+import 'package:advsw/providers/user_provider.dart';
 
 /// Provider for AuthService
 final authServiceProvider = Provider<AuthService>((ref) {
@@ -44,11 +45,12 @@ class AuthNotifier extends AsyncNotifier<bool> {
   Future<void> logout() async {
     state = const AsyncValue.loading();
     await ref.read(authServiceProvider).logout();
+    ref.invalidate(userProfileProvider);
     state = const AsyncValue.data(false);
   }
 
   /// Handle forgot password request
-  Future<bool> forgotPassword(String email) async {
+  Future<Map<String, dynamic>?> forgotPassword(String email) async {
     return ref.read(authServiceProvider).forgotPassword(email);
   }
 

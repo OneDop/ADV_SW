@@ -1,89 +1,73 @@
+import 'package:advsw/mock/mock_data.dart';
 import 'package:advsw/models/search_model.dart';
 import 'package:advsw/models/user_model.dart';
-import 'package:advsw/services/api_client.dart';
 
 class SearchService {
-  final ApiClient _apiClient = ApiClient();
-
-  /// GET /api/search/users?name={name}
   Future<List<SearchUserResult>> searchUsersByName(String name) async {
-    try {
-      final response = await _apiClient.get(
-        '/search/users',
-        queryParameters: {'name': name},
-      );
-      final List<dynamic> data = response.data;
-      return data.map((json) => SearchUserResult.fromJson(json)).toList();
-    } catch (e) {
-      rethrow;
-    }
+    await Future.delayed(const Duration(milliseconds: 300));
+    final lower = name.toLowerCase();
+    return MockData.searchableUsers.where((u) {
+      return '${u.firstName} ${u.lastName}'.toLowerCase().contains(lower) ||
+          u.email.toLowerCase().contains(lower);
+    }).toList();
   }
 
-  /// GET /api/search/users/skill?skillId={skillId}&experienceLevel={experienceLevel}
-  Future<List<SearchUserResult>> searchUsersBySkill(int skillId, {ExperienceLevel? experienceLevel}) async {
-    try {
-      final Map<String, dynamic> params = {'skillId': skillId};
-      if (experienceLevel != null) {
-        params['experienceLevel'] = experienceLevel.name;
-      }
-      final response = await _apiClient.get(
-        '/search/users/skill',
-        queryParameters: params,
-      );
-      final List<dynamic> data = response.data;
-      return data.map((json) => SearchUserResult.fromJson(json)).toList();
-    } catch (e) {
-      rethrow;
-    }
+  Future<List<SearchUserResult>> searchUsersBySkill(int skillId,
+      {ExperienceLevel? experienceLevel}) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    final skill = MockData.allSkills.firstWhere(
+      (s) => s.id == skillId,
+      orElse: () => throw Exception('Skill not found'),
+    );
+    return MockData.searchableUsers.where((u) {
+      return u.skills.any((s) {
+        final nameMatch = s.skillName == skill.name;
+        if (!nameMatch) return false;
+        if (experienceLevel != null) {
+          return s.experienceLevel == experienceLevel.name;
+        }
+        return true;
+      });
+    }).toList();
   }
 
-  /// GET /api/search/users/recommend?skillIds={skillIds}
   Future<List<SearchUserResult>> recommendUsersBySkills(List<int> skillIds) async {
-    try {
-      final response = await _apiClient.get(
-        '/search/users/recommend',
-        queryParameters: {'skillIds': skillIds.join(',')},
-      );
-      final List<dynamic> data = response.data;
-      return data.map((json) => SearchUserResult.fromJson(json)).toList();
-    } catch (e) {
-      rethrow;
-    }
+    await Future.delayed(const Duration(milliseconds: 300));
+    final skillNames = MockData.allSkills
+        .where((s) => skillIds.contains(s.id))
+        .map((s) => s.name)
+        .toSet();
+    return MockData.searchableUsers.where((u) {
+      return u.skills.any((s) => skillNames.contains(s.skillName));
+    }).toList();
   }
 
-  /// GET /api/search/users/advanced?name={name}&skillIds={skillIds}
-  Future<List<SearchUserResult>> searchUsers({String? name, List<int>? skillIds}) async {
-    try {
-      final Map<String, dynamic> params = {};
-      if (name != null && name.isNotEmpty) {
-        params['name'] = name;
-      }
-      if (skillIds != null && skillIds.isNotEmpty) {
-        params['skillIds'] = skillIds.join(',');
-      }
-      
-      final response = await _apiClient.get(
-        '/search/users/advanced',
-        queryParameters: params,
-      );
-      final List<dynamic> data = response.data;
-      return data.map((json) => SearchUserResult.fromJson(json)).toList();
-    } catch (e) {
-      rethrow;
+  Future<List<SearchUserResult>> searchUsers(
+      {String? name, List<int>? skillIds}) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    var results = List<SearchUserResult>.from(MockData.searchableUsers);
+    if (name != null && name.isNotEmpty) {
+      final lower = name.toLowerCase();
+      results = results.where((u) =>
+          '${u.firstName} ${u.lastName}'.toLowerCase().contains(lower)).toList();
     }
+    if (skillIds != null && skillIds.isNotEmpty) {
+      final skillNames = MockData.allSkills
+          .where((s) => skillIds.contains(s.id))
+          .map((s) => s.name)
+          .toSet();
+      results = results.where((u) =>
+          u.skills.any((s) => skillNames.contains(s.skillName))).toList();
+    }
+    return results;
   }
 
-  /// GET /api/search/projects?name={name}
   Future<List<SearchProjectResult>> browseOpenProjects({String? name}) async {
-    try {
-      final response = await _apiClient.get(
-        '/search/projects',
-        queryParameters: name != null && name.isNotEmpty ? {'name': name} : null,
-      );
-      final List<dynamic> data = response.data;
-      return data.map((json) => SearchProjectResult.fromJson(json)).toList();
-    } catch (e) {
-      rethrow;
-    }
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (name == null || name.isEmpty) return List.from(MockData.searchableProjects);
+    final lower = name.toLowerCase();
+    return MockData.searchableProjects
+        .where((p) => p.name.toLowerCase().contains(lower))
+        .toList();
   }
 }

@@ -1,101 +1,100 @@
+import 'package:advsw/mock/mock_data.dart';
 import 'package:advsw/models/user_model.dart';
-import 'package:advsw/services/api_client.dart';
-import 'package:dio/dio.dart';
 
 class UserService {
-  final ApiClient _apiClient = ApiClient();
-
-  /// GET /api/users/me
   Future<UserProfileResponse> getCurrentUserProfile() async {
-    try {
-      final response = await _apiClient.get('/users/me');
-      return UserProfileResponse.fromJson(response.data);
-    } catch (e) {
-      rethrow;
-    }
+    await Future.delayed(const Duration(milliseconds: 300));
+    return MockData.currentUser;
   }
 
-  /// GET /api/users/{id}
   Future<UserProfileResponse> getProfile(int id) async {
-    try {
-      final response = await _apiClient.get('/users/$id');
-      return UserProfileResponse.fromJson(response.data);
-    } catch (e) {
-      rethrow;
-    }
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (id == MockData.currentUserId) return MockData.currentUser;
+    final user = MockData.otherUsers[id];
+    if (user == null) throw Exception('User not found');
+    return user;
   }
 
-  /// PATCH /api/users/me
   Future<UserProfileResponse> updateProfile(UpdateProfileRequest request) async {
-    try {
-      final response = await _apiClient.patch('/users/me', data: request.toJson());
-      return UserProfileResponse.fromJson(response.data);
-    } catch (e) {
-      rethrow;
-    }
+    await Future.delayed(const Duration(milliseconds: 400));
+    MockData.currentUser = UserProfileResponse(
+      id: MockData.currentUser.id,
+      email: MockData.currentUser.email,
+      firstName: request.firstName,
+      lastName: request.lastName,
+      bio: request.bio,
+      profilePictureUrl: request.profilePictureUrl ?? MockData.currentUser.profilePictureUrl,
+      role: MockData.currentUser.role,
+      availabilityStatus: request.availabilityStatus,
+      skills: MockData.currentUser.skills,
+      pastProjects: MockData.currentUser.pastProjects,
+      averageRating: MockData.currentUser.averageRating,
+    );
+    return MockData.currentUser;
   }
 
-  /// PATCH /api/users/me/portfolio
   Future<UserProfileResponse> updatePortfolio(UpdatePortfolioRequest request) async {
-    try {
-      final response = await _apiClient.patch('/users/me/portfolio', data: request.toJson());
-      return UserProfileResponse.fromJson(response.data);
-    } catch (e) {
-      rethrow;
-    }
+    await Future.delayed(const Duration(milliseconds: 400));
+    return MockData.currentUser;
   }
 
-  /// PATCH /api/users/me/password
   Future<void> changePassword(ChangePasswordRequest request) async {
-    try {
-      await _apiClient.patch('/users/me/password', data: request.toJson());
-    } catch (e) {
-      rethrow;
-    }
+    await Future.delayed(const Duration(milliseconds: 400));
   }
 
-  /// POST /api/users/me/profile-picture
   Future<UserProfileResponse> uploadProfilePicture(String filePath) async {
-    try {
-      String fileName = filePath.split('/').last;
-      FormData formData = FormData.fromMap({
-        "file": await MultipartFile.fromFile(filePath, filename: fileName),
-      });
-
-      final response = await _apiClient.post('/users/me/profile-picture', data: formData);
-      return UserProfileResponse.fromJson(response.data);
-    } catch (e) {
-      rethrow;
-    }
+    await Future.delayed(const Duration(milliseconds: 600));
+    return MockData.currentUser;
   }
 
-  /// POST /api/users/me/skills
   Future<UserSkillResponse> addSkill(AddUserSkillRequest request) async {
-    try {
-      final response = await _apiClient.post('/users/me/skills', data: request.toJson());
-      return UserSkillResponse.fromJson(response.data);
-    } catch (e) {
-      rethrow;
-    }
+    await Future.delayed(const Duration(milliseconds: 300));
+    final skill = MockData.allSkills.firstWhere(
+      (s) => s.id == request.skillId,
+      orElse: () => throw Exception('Skill not found'),
+    );
+    final newSkill = UserSkillResponse(
+      id: DateTime.now().millisecondsSinceEpoch,
+      userId: MockData.currentUserId,
+      skillId: skill.id,
+      skillName: skill.name,
+      experienceLevel: request.experienceLevel,
+    );
+    MockData.currentUser = UserProfileResponse(
+      id: MockData.currentUser.id,
+      email: MockData.currentUser.email,
+      firstName: MockData.currentUser.firstName,
+      lastName: MockData.currentUser.lastName,
+      bio: MockData.currentUser.bio,
+      profilePictureUrl: MockData.currentUser.profilePictureUrl,
+      role: MockData.currentUser.role,
+      availabilityStatus: MockData.currentUser.availabilityStatus,
+      skills: [...MockData.currentUser.skills, newSkill],
+      pastProjects: MockData.currentUser.pastProjects,
+      averageRating: MockData.currentUser.averageRating,
+    );
+    return newSkill;
   }
 
-  /// DELETE /api/users/me/skills/{skillId}
   Future<void> removeSkill(int skillId) async {
-    try {
-      await _apiClient.delete('/users/me/skills/$skillId');
-    } catch (e) {
-      rethrow;
-    }
+    await Future.delayed(const Duration(milliseconds: 300));
+    MockData.currentUser = UserProfileResponse(
+      id: MockData.currentUser.id,
+      email: MockData.currentUser.email,
+      firstName: MockData.currentUser.firstName,
+      lastName: MockData.currentUser.lastName,
+      bio: MockData.currentUser.bio,
+      profilePictureUrl: MockData.currentUser.profilePictureUrl,
+      role: MockData.currentUser.role,
+      availabilityStatus: MockData.currentUser.availabilityStatus,
+      skills: MockData.currentUser.skills.where((s) => s.skillId != skillId).toList(),
+      pastProjects: MockData.currentUser.pastProjects,
+      averageRating: MockData.currentUser.averageRating,
+    );
   }
 
-  /// GET /api/users/me/skills
   Future<List<UserSkillResponse>> getSkills() async {
-    try {
-      final response = await _apiClient.get('/users/me/skills');
-      List<dynamic> data = response.data;
-      return data.map((json) => UserSkillResponse.fromJson(json)).toList();
-    } catch (e) {
-      rethrow;
-    }
+    await Future.delayed(const Duration(milliseconds: 200));
+    return MockData.currentUser.skills;
   }
 }

@@ -1,58 +1,46 @@
+import 'package:advsw/mock/mock_data.dart';
 import 'package:advsw/models/skill_model.dart';
 import 'package:advsw/models/user_model.dart';
-import 'package:advsw/services/api_client.dart';
 
 class SkillService {
-  final ApiClient _apiClient = ApiClient();
-
-  /// GET /api/skills
   Future<List<SkillResponse>> getAllSkills() async {
-    try {
-      final response = await _apiClient.get('/skills');
-      final List<dynamic> data = response.data;
-      return data.map((json) => SkillResponse.fromJson(json)).toList();
-    } catch (e) {
-      rethrow;
-    }
+    await Future.delayed(const Duration(milliseconds: 200));
+    return List.from(MockData.allSkills);
   }
 
-  /// POST /api/skills
   Future<SkillResponse> createSkill(CreateSkillRequest request) async {
-    try {
-      final response = await _apiClient.post('/skills', data: request.toJson());
-      return SkillResponse.fromJson(response.data);
-    } catch (e) {
-      rethrow;
-    }
+    await Future.delayed(const Duration(milliseconds: 300));
+    final skill = SkillResponse(
+      id: DateTime.now().millisecondsSinceEpoch % 100000,
+      name: request.name,
+    );
+    MockData.allSkills.add(skill);
+    return skill;
   }
 
-  /// POST /api/skills/user
   Future<UserSkillResponse> addSkillToUser(AddUserSkillRequest request) async {
-    try {
-      final response = await _apiClient.post('/skills/user', data: request.toJson());
-      return UserSkillResponse.fromJson(response.data);
-    } catch (e) {
-      rethrow;
-    }
+    await Future.delayed(const Duration(milliseconds: 300));
+    final skill = MockData.allSkills.firstWhere(
+      (s) => s.id == request.skillId,
+      orElse: () => throw Exception('Skill not found'),
+    );
+    final userSkill = UserSkillResponse(
+      id: DateTime.now().millisecondsSinceEpoch % 100000,
+      userId: MockData.currentUserId,
+      skillId: skill.id,
+      skillName: skill.name,
+      experienceLevel: request.experienceLevel,
+    );
+    return userSkill;
   }
 
-  /// DELETE /api/skills/user/{skillId}
   Future<void> removeSkillFromUser(int skillId) async {
-    try {
-      await _apiClient.delete('/skills/user/$skillId');
-    } catch (e) {
-      rethrow;
-    }
+    await Future.delayed(const Duration(milliseconds: 200));
   }
 
-  /// GET /api/skills/user/{userId}
   Future<List<UserSkillResponse>> getUserSkills(int userId) async {
-    try {
-      final response = await _apiClient.get('/skills/user/$userId');
-      final List<dynamic> data = response.data;
-      return data.map((json) => UserSkillResponse.fromJson(json)).toList();
-    } catch (e) {
-      rethrow;
-    }
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (userId == MockData.currentUserId) return MockData.currentUser.skills;
+    return MockData.otherUsers[userId]?.skills ?? [];
   }
 }

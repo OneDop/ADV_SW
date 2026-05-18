@@ -1,27 +1,27 @@
+import 'package:advsw/mock/mock_data.dart';
 import 'package:advsw/models/rating_model.dart';
-import 'package:advsw/services/api_client.dart';
 
 class RatingService {
-  final ApiClient _apiClient = ApiClient();
-
-  /// POST /api/ratings
   Future<RatingResponse> submitRating(CreateRatingRequest request) async {
-    try {
-      final response = await _apiClient.post('/ratings', data: request.toJson());
-      return RatingResponse.fromJson(response.data);
-    } catch (e) {
-      rethrow;
-    }
+    await Future.delayed(const Duration(milliseconds: 400));
+    final ratee = request.rateeId == MockData.currentUserId
+        ? MockData.currentUser
+        : MockData.otherUsers[request.rateeId];
+    final rating = RatingResponse(
+      id: DateTime.now().millisecondsSinceEpoch % 100000,
+      raterId: MockData.currentUserId,
+      raterName: '${MockData.currentUser.firstName} ${MockData.currentUser.lastName}',
+      rateeId: request.rateeId,
+      rateeName: ratee != null ? '${ratee.firstName} ${ratee.lastName}' : 'Unknown',
+      projectId: request.projectId,
+      score: request.score,
+    );
+    return rating;
   }
 
-  /// GET /api/ratings/user/{userId}
   Future<List<RatingResponse>> getRatingsForUser(int userId) async {
-    try {
-      final response = await _apiClient.get('/ratings/user/$userId');
-      final List<dynamic> data = response.data;
-      return data.map((json) => RatingResponse.fromJson(json)).toList();
-    } catch (e) {
-      rethrow;
-    }
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (userId == MockData.currentUserId) return List.from(MockData.ratingsForCurrentUser);
+    return [];
   }
 }

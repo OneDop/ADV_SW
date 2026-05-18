@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:advsw/services/api_client.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:advsw/services/auth_service.dart';
+import 'package:advsw/providers/auth_provider.dart';
 
 enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
 
@@ -19,21 +20,15 @@ class LoginState {
 }
 
 class LoginNotifier extends StateNotifier<LoginState> {
-  final ApiClient _apiClient;
+  final AuthService _authService;
 
-  LoginNotifier(this._apiClient) : super(LoginState());
+  LoginNotifier(this._authService) : super(LoginState());
 
   Future<void> login(String email, String password) async {
     state = state.copyWith(status: AuthStatus.loading);
     try {
-      final response = await _apiClient.post('/auth/authenticate', data: {
-        'email': email,
-        'password': password,
-      });
-
-      if (response.statusCode == 200 && response.data != null) {
-        final token = response.data['token'];
-        await _apiClient.saveToken(token);
+      final success = await _authService.login(email, password);
+      if (success) {
         state = state.copyWith(status: AuthStatus.authenticated);
       } else {
         state = state.copyWith(status: AuthStatus.error, errorMessage: 'Login failed. Please try again.');
@@ -44,14 +39,13 @@ class LoginNotifier extends StateNotifier<LoginState> {
   }
 
   Future<void> logout() async {
-    await _apiClient.logout();
+    await _authService.logout();
     state = state.copyWith(status: AuthStatus.unauthenticated);
   }
 
   Future<void> checkAuthStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString(ApiClient.tokenKey);
-    if (token != null) {
+    final isLoggedIn = await _authService.isLoggedIn();
+    if (isLoggedIn) {
       state = state.copyWith(status: AuthStatus.authenticated);
     } else {
       state = state.copyWith(status: AuthStatus.unauthenticated);
@@ -59,8 +53,6 @@ class LoginNotifier extends StateNotifier<LoginState> {
   }
 }
 
-final apiClientProvider = Provider((ref) => ApiClient());
-
 final loginNotifierProvider = StateNotifierProvider<LoginNotifier, LoginState>(
-  (ref) => LoginNotifier(ref.watch(apiClientProvider)),
+  (ref) => LoginNotifier(ref.watch(authServiceProvider)),
 );

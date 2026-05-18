@@ -3,8 +3,10 @@ import 'package:advsw/services/api_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  final ApiClient _apiClient = ApiClient();
+  final ApiClient _apiClient;
   static const String _tokenKey = 'auth_token';
+
+  AuthService(this._apiClient);
 
   Future<bool> login(String email, String password) async {
     try {
@@ -76,10 +78,8 @@ class AuthService {
 
   Future<void> logout() async {
     try {
-      // Call backend to invalidate the session/token
       await _apiClient.post('/auth/logout');
     } catch (e) {
-      // If logout fails (e.g. token already expired), we still clear local data
       print("Backend logout failed: $e");
     } finally {
       final prefs = await SharedPreferences.getInstance();

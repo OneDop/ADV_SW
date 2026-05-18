@@ -2,10 +2,11 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:advsw/models/rating_model.dart';
 import 'package:advsw/services/rating_service.dart';
+import 'package:advsw/services/api_client.dart'; // Import ApiClient
 
 /// Provider for RatingService
 final ratingServiceProvider = Provider<RatingService>((ref) {
-  return RatingService();
+  return RatingService(ref.watch(apiClientProvider)); // Inject ApiClient
 });
 
 /// AsyncNotifier to manage ratings for a specific user

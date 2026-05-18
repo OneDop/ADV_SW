@@ -25,6 +25,7 @@ class AdvSwApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeProvider);
+    final router = ref.watch(routerProvider);
     
     return MaterialApp.router(
       title: 'ProjectPal',
@@ -40,3 +41,7 @@ class AdvSwApp extends ConsumerWidget {
     );
   }
 }
+
+// pfp doesnt show after login, need to check if the user data is being fetched correctly and if the image URL is correct. Also check if the Image widget is handling errors properly (e.g. showing a placeholder if the image fails to load).
+// web socket connection is not working, need to check backend logs and flutter logs to debug
+// enum name mismatch in message model and backend response, need to standardize on snake_case or camelCase across the board to avoid confusion and bugs.

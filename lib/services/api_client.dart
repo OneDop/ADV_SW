@@ -1,8 +1,12 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ApiClient {
+  static final ApiClient _instance = ApiClient._internal();
+  factory ApiClient() => _instance;
+
   late Dio dio;
   static const String tokenKey = 'auth_token';
   static const String _baseUrl = 'http://192.168.1.126:8080/api';
@@ -14,7 +18,7 @@ class ApiClient {
     return '$serverBaseUrl$relativePath';
   }
 
-  ApiClient() {
+  ApiClient._internal() {
     dio = Dio(BaseOptions(
       baseUrl: _baseUrl,
       connectTimeout: const Duration(seconds: 10),
@@ -33,8 +37,10 @@ class ApiClient {
           final prefs = await SharedPreferences.getInstance();
           final token = prefs.getString(tokenKey);
 
-          if (token != null) {
+          if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
+          } else {
+            options.headers.remove('Authorization');
           }
           return handler.next(options);
         },
@@ -71,7 +77,6 @@ class ApiClient {
     await prefs.remove(tokenKey);
   }
 
-  // New method for profile image upload
   Future<Response> uploadProfilePicture(File image) async {
     try {
       String fileName = image.path.split('/').last;
@@ -124,3 +129,5 @@ class ApiClient {
     }
   }
 }
+
+final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());

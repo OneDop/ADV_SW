@@ -2,7 +2,9 @@ import 'package:advsw/models/rating_model.dart';
 import 'package:advsw/services/api_client.dart';
 
 class RatingService {
-  final ApiClient _apiClient = ApiClient();
+  final ApiClient _apiClient;
+
+  RatingService(this._apiClient);
 
   /// POST /api/ratings
   Future<RatingResponse> submitRating(CreateRatingRequest request) async {

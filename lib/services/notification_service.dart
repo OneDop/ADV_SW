@@ -2,7 +2,9 @@ import 'package:advsw/models/notification_model.dart';
 import 'package:advsw/services/api_client.dart';
 
 class NotificationService {
-  final ApiClient _apiClient = ApiClient();
+  final ApiClient _apiClient;
+
+  NotificationService(this._apiClient);
 
   /// GET /api/notifications
   Future<List<NotificationResponse>> getNotificationsForUser() async {

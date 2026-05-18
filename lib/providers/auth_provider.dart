@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:advsw/services/auth_service.dart';
+import 'package:advsw/services/api_client.dart';
 
 /// Provider for AuthService
 final authServiceProvider = Provider<AuthService>((ref) {
-  return AuthService();
+  return AuthService(ref.watch(apiClientProvider));
 });
 
 /// AsyncNotifier to manage the authentication state

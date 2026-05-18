@@ -2,10 +2,11 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:advsw/models/notification_model.dart';
 import 'package:advsw/services/notification_service.dart';
+import 'package:advsw/services/api_client.dart'; // Import ApiClient
 
 /// Provider for NotificationService
 final notificationServiceProvider = Provider<NotificationService>((ref) {
-  return NotificationService();
+  return NotificationService(ref.watch(apiClientProvider)); // Inject ApiClient
 });
 
 /// AsyncNotifier to manage the user's notifications

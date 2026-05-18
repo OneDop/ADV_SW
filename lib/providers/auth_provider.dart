@@ -20,6 +20,9 @@ class AuthNotifier extends AsyncNotifier<bool> {
     state = const AsyncValue.loading();
     final result = await ref.read(authServiceProvider).login(email, password);
     state = AsyncValue.data(result);
+    if (result) {
+      ref.invalidate(userProfileProvider);
+    }
     return result;
   }
 
@@ -45,7 +48,6 @@ class AuthNotifier extends AsyncNotifier<bool> {
   Future<void> logout() async {
     state = const AsyncValue.loading();
     await ref.read(authServiceProvider).logout();
-    ref.invalidate(userProfileProvider);
     state = const AsyncValue.data(false);
   }
 

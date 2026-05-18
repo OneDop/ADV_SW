@@ -171,77 +171,103 @@ class _RequestsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final invitationsAsync = ref.watch(userInvitationsProvider);
+    final joinRequestsAsync = ref.watch(ownerJoinRequestsProvider);
 
-    return invitationsAsync.when(
-      data: (invites) => RefreshIndicator(
-        onRefresh: () => ref.read(userInvitationsProvider.notifier).refresh(),
-        child: invites.isEmpty
-          ? const _EmptyState(
-              icon: Icons.person_add_disabled_outlined,
-              title: 'No pending requests',
-              subtitle: 'Invitations and join requests\nwill appear here.',
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: invites.length,
-              itemBuilder: (context, index) {
-                final invite = invites[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: AppTheme.shadowSm,
-                    border: Border.all(color: AppColors.lineSoft),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(invite.type == InvitationType.PROJECT_INVITATION ? 'Project Invitation' : 'Join Request',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.teal700)),
-                      const SizedBox(height: 4),
-                      Text(invite.type == InvitationType.PROJECT_INVITATION 
-                        ? '${invite.senderName} invited you to join ${invite.projectName}'
-                        : '${invite.senderName} wants to join ${invite.projectName}',
-                        style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink900)),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => ref.read(userInvitationsProvider.notifier).respond(invite.id, false),
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: AppColors.line),
-                                foregroundColor: AppColors.ink700,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              child: Text('Reject', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+    if (invitationsAsync.isLoading || joinRequestsAsync.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (invitationsAsync.hasError) {
+      return Center(child: Text('Error: ${invitationsAsync.error}'));
+    }
+    if (joinRequestsAsync.hasError) {
+      return Center(child: Text('Error: ${joinRequestsAsync.error}'));
+    }
+
+    final invites = invitationsAsync.value ?? [];
+    final joinRequests = joinRequestsAsync.value ?? [];
+    final all = [...invites, ...joinRequests];
+
+    Future<void> onRefresh() async {
+      await Future.wait([
+        ref.read(userInvitationsProvider.notifier).refresh(),
+        ref.read(ownerJoinRequestsProvider.notifier).refresh(),
+      ]);
+    }
+
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: all.isEmpty
+        ? const _EmptyState(
+            icon: Icons.person_add_disabled_outlined,
+            title: 'No pending requests',
+            subtitle: 'Invitations and join requests\nwill appear here.',
+          )
+        : ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: all.length,
+            itemBuilder: (context, index) {
+              final invite = all[index];
+              final isJoinRequest = invite.type == InvitationType.JOIN_REQUEST;
+              void onRespond(bool accept) {
+                if (isJoinRequest) {
+                  ref.read(ownerJoinRequestsProvider.notifier).respond(invite.id, accept);
+                } else {
+                  ref.read(userInvitationsProvider.notifier).respond(invite.id, accept);
+                }
+              }
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: AppTheme.shadowSm,
+                  border: Border.all(color: AppColors.lineSoft),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(isJoinRequest ? 'Join Request' : 'Project Invitation',
+                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.teal700)),
+                    const SizedBox(height: 4),
+                    Text(isJoinRequest
+                      ? '${invite.senderName} wants to join ${invite.projectName}'
+                      : '${invite.senderName} invited you to join ${invite.projectName}',
+                      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink900)),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => onRespond(false),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: AppColors.line),
+                              foregroundColor: AppColors.ink700,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
+                            child: Text('Reject', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () => ref.read(userInvitationsProvider.notifier).respond(invite.id, true),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.teal700,
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              child: Text('Accept', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => onRespond(true),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.teal700,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
+                            child: Text('Accept', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-      ),
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
     );
   }
 }

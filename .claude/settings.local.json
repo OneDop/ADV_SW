@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"leaveProject\\\\|updatePortfolio\\\\|pastProjects\" \"C:\\\\Users\\\\Qais\\\\Desktop\\\\ProjectPal\\\\src\\\\main\\\\java\\\\com\\\\_4\\\\ProjectPal\\\\project\\\\ProjectServiceImpl.java\" 2>/dev/null | head -20)",
+      "Read(//c/Users/Qais/Desktop/ProjectPal/src/main/java/com/_4/ProjectPal/project/**)",
+      "Bash(find \"C:\\\\Users\\\\Qais\\\\Desktop\\\\ProjectPal\" -name \"*Notification*\" -type f 2>/dev/null | head -10)",
+      "Read(//c/Users/Qais/Desktop/ProjectPal/**)"
+    ]
+  }
+}

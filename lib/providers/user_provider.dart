@@ -8,7 +8,7 @@ final userServiceProvider = Provider<UserService>((ref) {
 });
 
 /// AsyncNotifier to manage the current user's profile state
-class UserProfileNotifier extends AsyncNotifier<UserProfileResponse> {
+class UserProfileNotifier extends AutoDisposeAsyncNotifier<UserProfileResponse> {
   @override
   Future<UserProfileResponse> build() {
     return ref.watch(userServiceProvider).getCurrentUserProfile();
@@ -63,7 +63,7 @@ class UserProfileNotifier extends AsyncNotifier<UserProfileResponse> {
 }
 
 /// Provider for the current user's profile
-final userProfileProvider = AsyncNotifierProvider<UserProfileNotifier, UserProfileResponse>(UserProfileNotifier.new);
+final userProfileProvider = AsyncNotifierProvider.autoDispose<UserProfileNotifier, UserProfileResponse>(UserProfileNotifier.new);
 
 /// Provider to fetch any user's profile by ID
 final otherUserProfileProvider = FutureProvider.family<UserProfileResponse, int>((ref, userId) {

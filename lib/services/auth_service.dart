@@ -82,14 +82,13 @@ class AuthService {
   }
 
   Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-
     try {
       await _apiClient.post('/auth/logout');
     } catch (e) {
       print("Backend logout notification failed: $e");
     }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tokenKey);
   }
 
   Future<bool> isLoggedIn() async {

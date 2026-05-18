@@ -1,4 +1,5 @@
 import 'package:advsw/models/user_model.dart';
+import 'package:advsw/models/project_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -78,7 +79,7 @@ class HomeScreen extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(vertical: 4),
                           itemCount: projects.length + 1,
                           itemBuilder: (_, i) {
-                            if (i == projects.length) return _NewProjectBtn(onTap: () {});
+                            if (i == projects.length) return _NewProjectBtn(onTap: () => _showCreateProjectSheet(context, ref));
                             return ProjectCard(
                               project: projects[i],
                               onTap: () => context.push('/project/${projects[i].id}'),
@@ -227,4 +228,110 @@ class _NewProjectBtn extends StatelessWidget {
       ),
     );
   }
+}
+
+void _showCreateProjectSheet(BuildContext context, WidgetRef ref) {
+  final nameCtrl = TextEditingController();
+  final descCtrl = TextEditingController();
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) => Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'New Project',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink900),
+                ),
+                GestureDetector(
+                  onTap: () => Navigator.pop(ctx),
+                  child: const Icon(Icons.close_rounded, color: AppColors.ink500),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            _SheetLabel('NAME'),
+            const SizedBox(height: 6),
+            _SheetInput(hint: 'e.g. Mobile App Redesign', controller: nameCtrl),
+            const SizedBox(height: 14),
+            _SheetLabel('DESCRIPTION'),
+            const SizedBox(height: 6),
+            _SheetInput(hint: 'What is this project about?', controller: descCtrl, maxLines: 3),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  final name = nameCtrl.text.trim();
+                  if (name.isEmpty) return;
+                  Navigator.pop(ctx);
+                  ref.read(myProjectsProvider.notifier).createProject(
+                    CreateProjectRequest(name: name, description: descCtrl.text.trim()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.teal700,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
+                child: const Text('Create Project', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _SheetLabel extends StatelessWidget {
+  final String text;
+  const _SheetLabel(this.text);
+  @override
+  Widget build(BuildContext context) => Text(
+    text,
+    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.2, color: AppColors.ink500),
+  );
+}
+
+class _SheetInput extends StatelessWidget {
+  final String hint;
+  final TextEditingController controller;
+  final int maxLines;
+  const _SheetInput({required this.hint, required this.controller, this.maxLines = 1});
+  @override
+  Widget build(BuildContext context) => Container(
+    decoration: BoxDecoration(
+      color: AppColors.bgAlt,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: AppColors.line),
+    ),
+    child: TextField(
+      controller: controller,
+      maxLines: maxLines,
+      style: const TextStyle(fontSize: 14, color: AppColors.ink900),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(color: AppColors.ink400, fontSize: 14),
+        border: InputBorder.none,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      ),
+    ),
+  );
 }

@@ -98,7 +98,7 @@ class UserProfileScreen extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            s.skillName,
+                            '${s.skillName} (${s.experienceLevel.name[0]}${s.experienceLevel.name.substring(1).toLowerCase()})',
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               color: AppColors.teal700,

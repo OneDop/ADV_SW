@@ -313,8 +313,10 @@ class TaskRow extends StatelessWidget {
   final TaskResponse task;
   final VoidCallback? onToggle;
   final VoidCallback? onTap;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
-  const TaskRow({super.key, required this.task, this.onToggle, this.onTap});
+  const TaskRow({super.key, required this.task, this.onToggle, this.onTap, this.onEdit, this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -365,8 +367,23 @@ class TaskRow extends StatelessWidget {
                 ],
               ),
             ),
-            if (task.assigneeName != null)
+            if (task.assigneeName != null) ...[
               UserAvatar(name: task.assigneeName!, size: 22),
+              const SizedBox(width: 4),
+            ],
+            if (onEdit != null || onDelete != null)
+              PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert, size: 16, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+                padding: EdgeInsets.zero,
+                onSelected: (v) {
+                  if (v == 'edit') onEdit?.call();
+                  if (v == 'delete') onDelete?.call();
+                },
+                itemBuilder: (_) => [
+                  if (onEdit != null) const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  if (onDelete != null) const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
+                ],
+              ),
           ],
         ),
       ),

@@ -84,3 +84,34 @@ class ProjectJoinRequestsNotifier extends FamilyAsyncNotifier<List<InvitationRes
 final projectJoinRequestsProvider = AsyncNotifierProvider.family<ProjectJoinRequestsNotifier, List<InvitationResponse>, int>(
   ProjectJoinRequestsNotifier.new,
 );
+
+/// AsyncNotifier to manage pending join requests for all projects owned by the current user
+class OwnerJoinRequestsNotifier extends AsyncNotifier<List<InvitationResponse>> {
+  @override
+  FutureOr<List<InvitationResponse>> build() async {
+    return ref.watch(invitationServiceProvider).getJoinRequestsForOwner();
+  }
+
+  /// Respond to a join request and remove it from the list
+  Future<void> respond(int id, bool accept) async {
+    state = await AsyncValue.guard(() async {
+      await ref.read(invitationServiceProvider).respondToInvitation(
+        id,
+        RespondInvitationRequest(accept: accept),
+      );
+      final current = state.value ?? [];
+      return current.where((i) => i.id != id).toList();
+    });
+  }
+
+  /// Refresh the list
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => ref.read(invitationServiceProvider).getJoinRequestsForOwner());
+  }
+}
+
+/// Provider for all pending join requests directed at the current user's owned projects
+final ownerJoinRequestsProvider = AsyncNotifierProvider<OwnerJoinRequestsNotifier, List<InvitationResponse>>(
+  OwnerJoinRequestsNotifier.new,
+);

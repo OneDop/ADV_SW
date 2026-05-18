@@ -63,7 +63,7 @@ class SearchUserResult {
       firstName: json['firstName'],
       lastName: json['lastName'],
       email: json['email'],
-      bio: json['bio'],
+      bio: json['bio'] ?? '',
       profilePictureUrl: json['profilePictureUrl'],
       skills: (json['skills'] as List)
           .map((i) => SkillEntry.fromJson(i))

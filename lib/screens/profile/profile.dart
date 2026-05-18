@@ -333,7 +333,7 @@ String _formatExperienceLevel(ExperienceLevel level) {
 void _showAvailabilityPicker(BuildContext context, WidgetRef ref, AvailabilityStatus currentStatus) {
   showModalBottomSheet(
     context: context,
-    builder: (context) => Container(
+    builder: (ctx) => Container(
       padding: const EdgeInsets.symmetric(vertical: 20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -361,7 +361,7 @@ void _showAvailabilityPicker(BuildContext context, WidgetRef ref, AvailabilitySt
               ),
               trailing: isSelected ? const Icon(Icons.check_rounded, color: AppColors.teal700) : null,
               onTap: () async {
-                Navigator.pop(context);
+                Navigator.pop(ctx);
                 try {
                   final profile = ref.read(userProfileProvider).value;
                   if (profile != null) {

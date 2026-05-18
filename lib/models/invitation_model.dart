@@ -7,8 +7,8 @@ enum InvitationStatus {
 }
 
 enum InvitationType {
-  PROJECT_INVITATION,
-  COLLABORATION_REQUEST,
+  INVITE,
+  JOIN_REQUEST,
 }
 
 class CreateInvitationRequest {

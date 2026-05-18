@@ -68,4 +68,15 @@ class InvitationService {
       rethrow;
     }
   }
+
+  /// GET /api/invitations/my-join-requests
+  Future<List<InvitationResponse>> getJoinRequestsForOwner() async {
+    try {
+      final response = await _apiClient.get('/invitations/my-join-requests');
+      final List<dynamic> data = response.data;
+      return data.map((json) => InvitationResponse.fromJson(json)).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

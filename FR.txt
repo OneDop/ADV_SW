@@ -1,11 +1,11 @@
-📋 Functional Requirements
+ Functional Requirements
 👤 1. User Account & Authentication
 
 FR1 – Sign Up
-The system shall allow users to create an account using their personal information.
+The system shall allow users to create an account using their personal information. 
 
 FR2 – Log In
-The system shall allow users to log in using their credentials.
+The system shall allow users to log in using their credentials. 
 
 FR3 – Log Out
 The system shall allow users to log out of their account.
@@ -33,11 +33,11 @@ The system shall allow users to update their skills.
 FR10 – Upload Profile Picture
 The system shall allow users to upload and update a profile picture.
 
-FR11 – Add Past Projects
-The system shall allow users to add past projects to their profile.
+FR11 – View past Projects
+The system shall allow users to show or hide their past projects on their profile.
 
-FR12 – Specify Experience Level
-The system shall allow users to specify their experience level.
+FR12 – Specify Skill Experience Level
+The system shall allow users to specify an experience level for each skill they add to their profile.
 
 FR13 – View Other Profiles
 The system shall allow users to view other users’ profiles.
@@ -98,7 +98,6 @@ FR30 – View Tasks
 The system shall allow users to view all tasks within a project.
 
 🔍 5. Search & Discovery
-
 FR31 – Search Users by Name
 The system shall allow users to search for other users by name.
 
@@ -130,5 +129,30 @@ The system shall notify users when tasks are assigned to them.
 FR39 – Deadline Notifications
 The system shall notify users of upcoming deadlines.
 
+
 FR40 – Project Request Notifications
 The system shall notify users of join requests and approvals.
+FR41 – Delete Notifications
+The system shall allow the users to delete the notification when they read it.
+
+8.System Admin FR
+
+FR42 - Block user
+The system shall allow the system admin to block certain users from using the system.
+
+FR43  - View System Dashboard 
+The system shall allow the system admin to view the total system users,how many project owners, how many active users , how many blocked users, how many active projects, how many ended projects, how many skills are available, the total project number from the database. 
+
+FR44 - Manage Users 
+The system shall allow the admin to promote users to System admins, Block users.
+
+FR45 - Manage Projects
+The system shall allow the admin to remove certain projects from the view of other users, show project status, owner, member count and project name.
+
+FR46 - Manage skills
+The system shall allow the admin to view all available skills, add new skills, delete skills
+
+9. Random
+
+FR47 - Change application theme 
+The system shall allow the users to change the theme of the application. 

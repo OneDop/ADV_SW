@@ -103,7 +103,7 @@ class ProjectMembersScreen extends ConsumerWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          children: MemberRole.values.map((role) {
+          children: MemberRole.values.where((role) => role != MemberRole.OWNER).map((role) {
             return ListTile(
               title: Text(role.name),
               trailing: member.memberRole == role ? const Icon(Icons.check, color: AppColors.teal700) : null,

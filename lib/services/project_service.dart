@@ -98,4 +98,13 @@ class ProjectService {
       rethrow;
     }
   }
+
+  /// POST /api/projects/{projectId}/leave
+  Future<void> leaveProject(int projectId) async {
+    try {
+      await _apiClient.post('/projects/$projectId/leave');
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

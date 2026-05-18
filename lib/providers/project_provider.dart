@@ -41,6 +41,14 @@ class MyProjectsNotifier extends AsyncNotifier<List<ProjectResponse>> {
     });
   }
 
+  /// Leave a project and refresh the list
+  Future<void> leaveProject(int projectId) async {
+    state = await AsyncValue.guard(() async {
+      await ref.read(projectServiceProvider).leaveProject(projectId);
+      return ref.read(projectServiceProvider).getMyProjects();
+    });
+  }
+
   /// Refresh the list of user's projects
   Future<void> refresh() async {
     state = const AsyncValue.loading();

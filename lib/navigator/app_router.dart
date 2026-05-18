@@ -18,11 +18,29 @@ import 'package:advsw/screens/auth/signup_screen.dart';
 import 'package:advsw/screens/profile/profile.dart';
 import 'package:advsw/providers/auth_provider.dart';
 
+/// Bridges Riverpod auth state changes to GoRouter's [refreshListenable]
+/// so the [redirect] callback re-evaluates whenever auth state changes.
+/// This ensures stale protected pages cannot be revealed via back navigation
+/// after logout, and that session expiry is caught in real time.
+class _GoRouterRefreshNotifier extends ChangeNotifier {
+  void refresh() => notifyListeners();
+}
+
+final _refreshNotifierProvider = Provider<_GoRouterRefreshNotifier>((ref) {
+  final notifier = _GoRouterRefreshNotifier();
+  ref.listen<AsyncValue<bool>>(authProvider, (prev, next) {
+    notifier.refresh();
+  });
+  return notifier;
+});
+
 final routerProvider = Provider<GoRouter>((ref) {
   final authService = ref.watch(authServiceProvider);
+  final refreshNotifier = ref.watch(_refreshNotifierProvider);
 
   return GoRouter(
     initialLocation: '/login',
+    refreshListenable: refreshNotifier,
     redirect: (context, state) async {
       final isLoggedIn = await authService.isLoggedIn();
       final isAuthRoute = state.matchedLocation == '/login' ||

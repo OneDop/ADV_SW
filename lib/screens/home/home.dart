@@ -152,31 +152,7 @@ class _RatingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.teal700,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: AppTheme.shadowMd,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Profile Rating', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white)),
-                const SizedBox(height: 4),
-                Text('Your average rating is ${user.averageRating.toStringAsFixed(1)}. Keep it up!',
-                  style: const TextStyle(fontSize: 12, color: Colors.white70)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          ProgressRing(value: user.averageRating / 5.0),
-        ],
-      ),
-    );
+    return Container();
   }
 }
 

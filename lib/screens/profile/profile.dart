@@ -128,18 +128,7 @@ class ProfileScreen extends ConsumerWidget {
                     ),
 
                     // ── Stats ────────────────────────────────────────────────────
-                    const SizedBox(height: 16),
-                    Row(children: [
-                      myProjectsAsync.when(
-                        data: (projects) => _StatCard(icon: Icons.grid_view_rounded, value: '${projects.length}', label: 'Projects'),
-                        loading: () => const _StatCard(icon: Icons.grid_view_rounded, value: '...', label: 'Projects'),
-                        error: (e, st) => const _StatCard(icon: Icons.grid_view_rounded, value: '!', label: 'Projects'),
-                      ),
-                      const SizedBox(width: 10),
-                      const _StatCard(icon: Icons.check_circle_outline_rounded, value: '84', label: 'Tasks done'),
-                      const SizedBox(width: 10),
-                      const _StatCard(icon: Icons.local_fire_department_rounded, value: '4d', label: 'Streak'),
-                    ]),
+                    
 
                     // ── Skills ───────────────────────────────────────────────────
                     SectionHeader(title: 'Skills', action: 'Edit', onAction: () => context.push('/skills-management')),
@@ -151,23 +140,7 @@ class ProfileScreen extends ConsumerWidget {
                       )).toList(),
                     ),
 
-                    // ── Experience ───────────────────────────────────────────────
-                    SectionHeader(title: 'Experience', action: 'Update', onAction: () => context.push('/portfolio-update')),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surface, borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: isDark ? Colors.white10 : AppColors.lineSoft), boxShadow: isDark ? [] : AppTheme.shadowSm,
-                      ),
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text('Profile Rating: ${u.averageRating}', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: theme.colorScheme.onSurface)),
-                        const SizedBox(height: 4),
-                        Text('Level: ${u.experienceLevel?.name ?? "Not set"}', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.teal700)),
-                        const SizedBox(height: 4),
-                        Text('Set your experience level so collaborators know what to expect.',
-                          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
-                      ]),
-                    ),
+                    
 
                     // ── Past projects ────────────────────────────────────────────
                     SectionHeader(title: 'Past projects', action: '+ Add', onAction: () => context.push('/portfolio-update')),

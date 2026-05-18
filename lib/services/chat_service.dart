@@ -7,7 +7,7 @@ import 'package:advsw/models/message_model.dart';
 class ChatService {
   StompClient? _stompClient;
   static const String _tokenKey = 'auth_token';
-  static const String _serverHost = '192.168.1.126';
+  static const String _serverHost = '10.236.55.75';
   static const int _serverPort = 8080;
 
   final _messageController = StreamController<MessageResponse>.broadcast();

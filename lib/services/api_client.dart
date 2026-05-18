@@ -8,9 +8,10 @@ class ApiClient {
   factory ApiClient() => _instance;
 
   late Dio dio;
+  bool _isLoggingOut = false; // Flag to suppress errors during logout
   static const String tokenKey = 'auth_token';
-  static const String _baseUrl = 'http://192.168.1.126:8080/api';
-  static const String serverBaseUrl = 'http://192.168.1.126:8080';
+  static const String _baseUrl = 'http://10.236.55.75:8080/api';
+  static const String serverBaseUrl = 'http://10.236.55.75:8080';
 
   static String? buildImageUrl(String? relativePath) {
     if (relativePath == null || relativePath.isEmpty) return null;
@@ -40,11 +41,21 @@ class ApiClient {
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           } else {
+            // Ensure no Authorization header is sent if token is not available
             options.headers.remove('Authorization');
           }
           return handler.next(options);
         },
         onError: (DioException e, handler) {
+          // Suppress 401 errors during logout to prevent stale error popups
+          if (_isLoggingOut && e.response?.statusCode == 401) {
+            return handler.resolve(Response(
+              statusCode: 200,
+              data: {},
+              requestOptions: e.requestOptions,
+            ));
+          }
+          
           String errorMessage = 'An unexpected error occurred.';
           if (e.response != null && e.response?.data != null) {
             if (e.response?.data is Map && e.response?.data.containsKey('message')) {
@@ -72,9 +83,19 @@ class ApiClient {
     await prefs.setString(tokenKey, token);
   }
 
-  Future<void> logout() async {
+  /// Clear the authentication token from storage and memory
+  Future<void> clearToken() async {
+    _isLoggingOut = true; // Suppress stale 401 errors during logout
+    
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(tokenKey);
+    // Ensure the header is explicitly cleared for the next request
+    dio.options.headers.remove('Authorization');
+    
+    // Reset the flag after a short delay to allow pending requests to settle
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _isLoggingOut = false;
+    });
   }
 
   Future<Response> uploadProfilePicture(File image) async {

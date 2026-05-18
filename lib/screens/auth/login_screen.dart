@@ -13,8 +13,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _emailCtrl    = TextEditingController(text: 'alex.rivera@quietengine.io');
-  final _passwordCtrl = TextEditingController(text: 'demo1234');
+  final _emailCtrl    = TextEditingController();
+  final _passwordCtrl = TextEditingController();
   bool _remember = true;
   String? _error;
 

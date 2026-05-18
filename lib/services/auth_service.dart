@@ -78,12 +78,16 @@ class AuthService {
 
   Future<void> logout() async {
     try {
+      // Make logout request to invalidate session on server
+      // Token is automatically included via interceptor
       await _apiClient.post('/auth/logout');
     } catch (e) {
+      // Log error but continue with local cleanup
       print("Backend logout failed: $e");
     } finally {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_tokenKey);
+      // Always clear token locally, even if server request fails
+      // This also removes it from Dio headers
+      await _apiClient.clearToken();
     }
   }
 

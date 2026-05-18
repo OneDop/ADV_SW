@@ -33,11 +33,11 @@ The system shall allow users to update their skills.
 FR10 – Upload Profile Picture
 The system shall allow users to upload and update a profile picture.
 
-FR11 – Add Past Projects
-The system shall allow users to add past projects to their profile.
+FR11 – Manage Past Projects
+The system shall allow users to add past projects to their profile.(manage past projects to show or hide any of them using a toggle)
 
 FR12 – Specify Experience Level
-The system shall allow users to specify their experience level.
+The system shall allow users to specify their experience level for each skill independently.
 
 FR13 – View Other Profiles
 The system shall allow users to view other users’ profiles.

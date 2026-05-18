@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:advsw/services/auth_service.dart';
 import 'package:advsw/services/api_client.dart';
+import 'package:advsw/providers/user_provider.dart';
 
 /// Provider for AuthService
 final authServiceProvider = Provider<AuthService>((ref) {
@@ -20,6 +21,9 @@ class AuthNotifier extends AsyncNotifier<bool> {
     state = const AsyncValue.loading();
     final result = await ref.read(authServiceProvider).login(email, password);
     state = AsyncValue.data(result);
+    if (result) {
+      ref.invalidate(userProfileProvider);
+    }
     return result;
   }
 
@@ -38,6 +42,9 @@ class AuthNotifier extends AsyncNotifier<bool> {
       password: password,
     );
     state = AsyncValue.data(result);
+    if (result) {
+      ref.invalidate(userProfileProvider);
+    }
     return result;
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:advsw/models/user_model.dart';
 import 'package:advsw/services/user_service.dart';
+import 'package:advsw/providers/auth_provider.dart';
 
 /// Provider for UserService
 final userServiceProvider = Provider<UserService>((ref) {

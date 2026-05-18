@@ -13,8 +13,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _emailCtrl    = TextEditingController(text: 'alex.rivera@quietengine.io');
-  final _passwordCtrl = TextEditingController(text: 'demo1234');
+  final _emailCtrl    = TextEditingController();
+  final _passwordCtrl = TextEditingController();
   bool _remember = true;
   String? _error;
 
@@ -160,28 +160,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         loading: ref.watch(authProvider).isLoading,
                         onPressed: ref.watch(authProvider).isLoading ? null : _handleLogin,
                       ),
-                      const SizedBox(height: 20),
+                      
 
                       // OR divider
-                      Row(
-                        children: [
-                          const Expanded(child: Divider(color: AppColors.line)),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text('OR CONTINUE WITH', style: TextStyle(fontSize: 10, color: AppColors.ink400, letterSpacing: 0.8)),
-                          ),
-                          const Expanded(child: Divider(color: AppColors.line)),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-
-                      Row(// nothing
-                        children: [
-                          Expanded(child: SocialBtn(label: 'Google', icon: Icons.g_mobiledata_rounded, onPressed: () => context.go('/home'))),
-                          const SizedBox(width: 10),
-                          Expanded(child: SocialBtn(label: 'Apple', icon: Icons.apple_rounded, onPressed: () => context.go('/home'))),
-                        ],
-                      ),
+                      
                     ],
                   ),
                 ),

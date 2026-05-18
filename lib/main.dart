@@ -37,6 +37,12 @@ class AdvSwApp extends ConsumerWidget {
         textTheme: GoogleFonts.interTextTheme(AppTheme.darkTheme.textTheme),
       ),
       routerConfig: router,
+      builder: (context, child) {
+        return SafeArea(
+          top: false,
+          child: child!,
+        );
+      },
     );
   }
 }

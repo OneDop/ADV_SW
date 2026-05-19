@@ -271,15 +271,15 @@ class _ProjectInfoScreenState extends ConsumerState<ProjectInfoScreen>
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.surface,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: AppColors.line),
                             boxShadow: AppTheme.shadowSm,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.arrow_back_rounded,
                             size: 20,
-                            color: AppColors.ink900,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ),
@@ -325,7 +325,7 @@ class _ProjectInfoScreenState extends ConsumerState<ProjectInfoScreen>
                 ),
 
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                  padding: const EdgeInsets.only(top: 8),
                   child: TabBar(
                     controller: _tabCtrl,
                     labelColor: AppColors.teal700,
@@ -598,21 +598,14 @@ class _TasksTab extends ConsumerStatefulWidget {
 class _TasksTabState extends ConsumerState<_TasksTab> {
   String _view = 'board';
   int? _selectedAssigneeId;
-  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
-    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (mounted) {
-        ref.read(projectTasksProvider(widget.projectId).notifier).refresh();
-      }
-    });
   }
 
   @override
   void dispose() {
-    _refreshTimer?.cancel();
     super.dispose();
   }
 
@@ -1132,7 +1125,7 @@ class _BoardView extends StatelessWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(99),
                       border: Border.all(color: AppColors.line),
                     ),
@@ -1193,7 +1186,7 @@ class _KanbanCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.lineSoft),
         boxShadow: AppTheme.shadowSm,
@@ -1271,7 +1264,7 @@ class _KanbanCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(color: AppColors.line),
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.surface,
                         ),
                         child: const Icon(Icons.arrow_back_rounded, size: 14, color: AppColors.ink500),
                       ),
@@ -1285,7 +1278,7 @@ class _KanbanCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(color: AppColors.line),
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.surface,
                         ),
                         child: const Icon(Icons.arrow_forward_rounded, size: 14, color: AppColors.teal700),
                       ),
@@ -1388,7 +1381,7 @@ class _MemberCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.lineSoft),
         boxShadow: AppTheme.shadowSm,
@@ -1683,7 +1676,7 @@ class _Bubble extends StatelessWidget {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: isMe ? AppColors.teal700 : Colors.white,
+                  color: isMe ? AppColors.teal700 : Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(18),
                     topRight: const Radius.circular(18),
@@ -2287,12 +2280,12 @@ class _HeaderBtn extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.line),
           boxShadow: AppTheme.shadowSm,
         ),
-        child: Icon(icon, size: 20, color: AppColors.ink700),
+        child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.onSurface),
       ),
     );
   }

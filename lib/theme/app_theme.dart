@@ -50,7 +50,7 @@ class AppTheme {
     colorScheme: ColorScheme.fromSeed(
       seedColor: AppColors.teal700,
       primary: AppColors.teal700,
-      surface: AppColors.bg,
+      surface: Colors.white,
       brightness: Brightness.light,
     ),
     scaffoldBackgroundColor: AppColors.bg,

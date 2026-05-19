@@ -41,7 +41,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
             padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
             duration: const Duration(milliseconds: 200),
             child: Container(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,7 +80,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                             selectedColor: AppColors.teal700.withOpacity(0.1),
                             checkmarkColor: AppColors.teal700,
                             labelStyle: GoogleFonts.inter(fontSize: 12, color: isSelected ? AppColors.teal700 : AppColors.ink700),
-                            backgroundColor: Colors.white,
+                            backgroundColor: Theme.of(context).colorScheme.surface,
                             shape: StadiumBorder(side: BorderSide(color: isSelected ? AppColors.teal700 : AppColors.line)),
                           ),
                         );
@@ -114,7 +114,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white, borderRadius: BorderRadius.circular(16),
+                        color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: AppColors.lineSoft), boxShadow: AppTheme.shadowSm,
                       ),
                       child: Row(

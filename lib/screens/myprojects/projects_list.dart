@@ -80,7 +80,6 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
     final projectsAsync = ref.watch(myProjectsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

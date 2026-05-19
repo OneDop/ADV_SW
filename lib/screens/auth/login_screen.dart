@@ -48,7 +48,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgAlt,
       body: Container(
         decoration: const BoxDecoration(
           gradient: RadialGradient(

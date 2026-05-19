@@ -38,11 +38,9 @@ class _SearchUsersScreenState extends ConsumerState<SearchUsersScreen> {
     final allSkillsAsync = ref.watch(allSkillsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
       appBar: AppBar(
-        title: Text('Find Talent', 
-          style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: AppColors.ink900)),
-        backgroundColor: Colors.white,
+        title: Text('Find Talent',
+          style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
         elevation: 0,
         centerTitle: false,
       ),

@@ -14,11 +14,9 @@ class ProjectDiscoveryScreen extends ConsumerWidget {
     final projectsAsync = ref.watch(projectSearchProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
       appBar: AppBar(
-        title: Text('Discover Projects', 
-          style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: AppColors.ink900)),
-        backgroundColor: Colors.white,
+        title: Text('Discover Projects',
+          style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
         elevation: 0,
       ),
       body: Column(
@@ -55,7 +53,7 @@ class ProjectDiscoveryScreen extends ConsumerWidget {
                 : RefreshIndicator(
                     onRefresh: () => ref.read(projectSearchProvider.notifier).clear(),
                     child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 16),
                       itemCount: projects.length,
                       itemBuilder: (context, index) => ProjectDiscoveryCard(project: projects[index]),
                     ),

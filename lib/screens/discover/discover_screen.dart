@@ -22,7 +22,6 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     final projectSearchAsync = ref.watch(projectSearchProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
       body: SafeArea(
         child: AnimatedPadding(
           padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),

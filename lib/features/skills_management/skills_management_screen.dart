@@ -128,11 +128,9 @@ class _SkillsManagementScreenState extends ConsumerState<SkillsManagementScreen>
     final allSkillsAsync = ref.watch(allSkillsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
       appBar: AppBar(
         title: Text('Manage Skills',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: AppColors.ink900)),
-        backgroundColor: Colors.white,
+          style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
         elevation: 0,
       ),
       body: profileAsync.when(

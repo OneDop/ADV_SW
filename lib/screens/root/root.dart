@@ -50,7 +50,7 @@ class _BottomNav extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.only(left: 6, right: 6, top: 8, bottom: 20),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.92),
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.95),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
               border: Border(top: BorderSide(color: AppColors.teal700.withValues(alpha: 0.08))),
             ),

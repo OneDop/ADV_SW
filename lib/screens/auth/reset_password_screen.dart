@@ -59,7 +59,6 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgAlt,
       body: Container(
         decoration: const BoxDecoration(
           gradient: RadialGradient(

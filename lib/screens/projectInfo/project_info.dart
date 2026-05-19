@@ -255,7 +255,6 @@ class _ProjectInfoScreenState extends ConsumerState<ProjectInfoScreen>
     final currentUserId = ref.watch(userProfileProvider).value?.id;
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
       body: SafeArea(
         child: projectAsync.when(
           data: (project) {
@@ -1409,12 +1408,15 @@ class _MemberCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      '${member.firstName} ${member.lastName}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.ink900,
+                    Flexible(
+                      child: Text(
+                        '${member.firstName} ${member.lastName}',
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.ink900,
+                        ),
                       ),
                     ),
                     if (isSelf)

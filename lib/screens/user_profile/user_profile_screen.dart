@@ -17,18 +17,12 @@ class UserProfileScreen extends ConsumerWidget {
     final userService = UserService();
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
       appBar: AppBar(
         title: Text(
           'Profile',
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.w700,
-            color: AppColors.ink900,
-          ),
+          style: GoogleFonts.inter(fontWeight: FontWeight.w700),
         ),
-        backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.ink900),
       ),
       body: FutureBuilder<UserProfileResponse>(
         future: userService.getProfile(userId),

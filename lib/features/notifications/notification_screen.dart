@@ -15,11 +15,9 @@ class NotificationScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: AppColors.bg,
         appBar: AppBar(
-          title: Text('Inbox', 
-            style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: AppColors.ink900)),
-          backgroundColor: Colors.white,
+          title: Text('Inbox',
+            style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
           elevation: 0,
           actions: [
             IconButton(

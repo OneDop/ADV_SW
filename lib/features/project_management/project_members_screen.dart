@@ -16,13 +16,10 @@ class ProjectMembersScreen extends ConsumerWidget {
     final membersAsync = ref.watch(projectMembersProvider(projectId));
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
       appBar: AppBar(
-        title: Text('Project Members', 
-          style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: AppColors.ink900)),
-        backgroundColor: Colors.white,
+        title: Text('Project Members',
+          style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.ink900),
         actions: [
           IconButton(
             onPressed: () => ref.read(projectMembersProvider(projectId).notifier).refresh(),

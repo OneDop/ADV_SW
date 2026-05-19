@@ -18,7 +18,6 @@ class HomeScreen extends ConsumerWidget {
     final myProjectsAsync = ref.watch(myProjectsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
       body: SafeArea(
         child: userProfileAsync.when(
           data: (user) => CustomScrollView(
@@ -215,7 +214,7 @@ void _showCreateProjectSheet(BuildContext context, WidgetRef ref) {
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (ctx) => Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom + MediaQuery.of(ctx).padding.bottom),
       child: Container(
         padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
         decoration: const BoxDecoration(

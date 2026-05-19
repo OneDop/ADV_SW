@@ -25,6 +25,14 @@ class AllSkillsNotifier extends AsyncNotifier<List<SkillResponse>> {
     });
   }
 
+  Future<void> deleteSkill(int id) async {
+    state = await AsyncValue.guard(() async {
+      await ref.read(skillServiceProvider).deleteSkill(id);
+      final currentSkills = state.value ?? [];
+      return currentSkills.where((s) => s.id != id).toList();
+    });
+  }
+
   /// Refresh the list of all skills
   Future<void> refresh() async {
     state = const AsyncValue.loading();

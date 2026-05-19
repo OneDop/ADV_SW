@@ -1,107 +1,100 @@
-import 'package:advsw/mock/mock_data.dart';
 import 'package:advsw/models/project_model.dart';
+import 'package:advsw/services/api_client.dart';
 
 class ProjectService {
+  final ApiClient _apiClient = ApiClient();
+
   Future<ProjectResponse> createProject(CreateProjectRequest request) async {
-    await Future.delayed(const Duration(milliseconds: 400));
-    final id = DateTime.now().millisecondsSinceEpoch % 100000;
-    final project = ProjectResponse(
-      id: id,
-      name: request.name,
-      description: request.description,
-      status: ProjectStatus.OPEN,
-      ownerId: MockData.currentUserId,
-      ownerName: '${MockData.currentUser.firstName} ${MockData.currentUser.lastName}',
-      isDeleted: false,
-    );
-    MockData.myProjects.insert(0, project);
-    MockData.projectMembers[id] = [
-      ProjectMemberResponse(
-        userId: MockData.currentUserId,
-        email: MockData.currentUser.email,
-        firstName: MockData.currentUser.firstName,
-        lastName: MockData.currentUser.lastName,
-        memberRole: MemberRole.OWNER,
-      ),
-    ];
-    MockData.tasksByProject[id] = [];
-    return project;
+    try {
+      final response = await _apiClient.post('/projects', data: request.toJson());
+      return ProjectResponse.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<ProjectResponse> updateProject(int id, UpdateProjectRequest request) async {
-    await Future.delayed(const Duration(milliseconds: 400));
-    final idx = MockData.myProjects.indexWhere((p) => p.id == id);
-    if (idx == -1) throw Exception('Project not found');
-    final updated = ProjectResponse(
-      id: id,
-      name: request.name,
-      description: request.description,
-      status: request.status,
-      ownerId: MockData.myProjects[idx].ownerId,
-      ownerName: MockData.myProjects[idx].ownerName,
-      isDeleted: false,
-    );
-    MockData.myProjects[idx] = updated;
-    return updated;
+    try {
+      final response = await _apiClient.patch('/projects/$id', data: request.toJson());
+      return ProjectResponse.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> softDeleteProject(int id) async {
-    await Future.delayed(const Duration(milliseconds: 400));
-    MockData.myProjects.removeWhere((p) => p.id == id);
+    try {
+      await _apiClient.delete('/projects/$id');
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<ProjectResponse> getProjectById(int id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final all = [...MockData.myProjects, ...MockData.browseProjects];
-    final project = all.firstWhere(
-      (p) => p.id == id,
-      orElse: () => throw Exception('Project not found'),
-    );
-    return project;
+    try {
+      final response = await _apiClient.get('/projects/$id');
+      return ProjectResponse.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<List<ProjectResponse>> getMyProjects() async {
-    await Future.delayed(const Duration(milliseconds: 400));
-    return List.from(MockData.myProjects);
+    try {
+      final response = await _apiClient.get('/projects/my');
+      final List<dynamic> data = response.data;
+      return data.map((json) => ProjectResponse.fromJson(json)).toList();
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<List<ProjectResponse>> browseAvailableProjects() async {
-    await Future.delayed(const Duration(milliseconds: 400));
-    return List.from(MockData.browseProjects);
+    try {
+      final response = await _apiClient.get('/projects/browse');
+      final List<dynamic> data = response.data;
+      return data.map((json) => ProjectResponse.fromJson(json)).toList();
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<List<ProjectMemberResponse>> getProjectMembers(int id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return List.from(MockData.projectMembers[id] ?? []);
+    try {
+      final response = await _apiClient.get('/projects/$id/members');
+      final List<dynamic> data = response.data;
+      return data.map((json) => ProjectMemberResponse.fromJson(json)).toList();
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<List<ProjectMemberResponse>> updateMemberRole(
       int projectId, int userId, UpdateMemberRoleRequest request) async {
-    await Future.delayed(const Duration(milliseconds: 400));
-    final members = MockData.projectMembers[projectId];
-    if (members == null) throw Exception('Project not found');
-    final idx = members.indexWhere((m) => m.userId == userId);
-    if (idx == -1) throw Exception('Member not found');
-    members[idx] = ProjectMemberResponse(
-      userId: members[idx].userId,
-      email: members[idx].email,
-      firstName: members[idx].firstName,
-      lastName: members[idx].lastName,
-      profilePictureUrl: members[idx].profilePictureUrl,
-      memberRole: request.memberRole,
-    );
-    return List.from(members);
+    try {
+      final response = await _apiClient.patch(
+          '/projects/$projectId/members/$userId/role',
+          data: request.toJson());
+      final List<dynamic> data = response.data;
+      return data.map((json) => ProjectMemberResponse.fromJson(json)).toList();
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> removeMember(int projectId, int userId) async {
-    await Future.delayed(const Duration(milliseconds: 400));
-    MockData.projectMembers[projectId]?.removeWhere((m) => m.userId == userId);
+    try {
+      await _apiClient.delete('/projects/$projectId/members/$userId');
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> leaveProject(int projectId) async {
-    await Future.delayed(const Duration(milliseconds: 400));
-    MockData.projectMembers[projectId]
-        ?.removeWhere((m) => m.userId == MockData.currentUserId);
-    MockData.myProjects.removeWhere((p) => p.id == projectId);
+    try {
+      await _apiClient.post('/projects/$projectId/leave');
+    } catch (e) {
+      rethrow;
+    }
   }
 }

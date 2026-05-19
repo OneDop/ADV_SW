@@ -11,6 +11,11 @@ import 'package:advsw/models/rating_model.dart';
 class MockData {
   static const int currentUserId = 1;
 
+  // ── Admin state ────────────────────────────────────────────────────────────
+  static final Set<int> blockedUserIds = {};
+  static final Set<int> hiddenProjectIds = {};
+  static final Map<int, Role> userRoles = {};
+
   // ── Users ─────────────────────────────────────────────────────────────────
 
   static UserProfileResponse currentUser = UserProfileResponse(

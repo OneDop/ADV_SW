@@ -1,32 +1,33 @@
-import 'package:advsw/mock/mock_data.dart';
 import 'package:advsw/models/message_model.dart';
+import 'package:advsw/services/api_client.dart';
 
 class MessageService {
+  final ApiClient _apiClient = ApiClient();
+
   Future<MessageResponse> sendMessage(int projectId, SendMessageRequest request) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final msg = MessageResponse(
-      id: MockData.nextMessageId(),
-      projectId: projectId,
-      senderId: MockData.currentUserId,
-      senderName: '${MockData.currentUser.firstName} ${MockData.currentUser.lastName}',
-      content: request.content,
-      fileUrl: request.fileUrl,
-      fileName: request.fileName,
-      sentAt: DateTime.now(),
-    );
-    MockData.messagesByProject.putIfAbsent(projectId, () => []).add(msg);
-    return msg;
+    try {
+      final response = await _apiClient.post('/messages/project/$projectId', data: request.toJson());
+      return MessageResponse.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<List<MessageResponse>> getProjectHistory(int projectId) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return List.from(MockData.messagesByProject[projectId] ?? []);
+    try {
+      final response = await _apiClient.get('/messages/project/$projectId');
+      final List<dynamic> data = response.data;
+      return data.map((json) => MessageResponse.fromJson(json)).toList();
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> deleteMessage(int messageId) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    for (final list in MockData.messagesByProject.values) {
-      list.removeWhere((m) => m.id == messageId);
+    try {
+      await _apiClient.delete('/messages/$messageId');
+    } catch (e) {
+      rethrow;
     }
   }
 }

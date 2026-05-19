@@ -1,19 +1,32 @@
-import 'package:advsw/mock/mock_data.dart';
 import 'package:advsw/models/notification_model.dart';
+import 'package:advsw/services/api_client.dart';
 
 class NotificationService {
+  final ApiClient _apiClient = ApiClient();
+
   Future<List<NotificationResponse>> getNotificationsForUser() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return List.from(MockData.notifications);
+    try {
+      final response = await _apiClient.get('/notifications');
+      final List<dynamic> data = response.data;
+      return data.map((json) => NotificationResponse.fromJson(json)).toList();
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> deleteNotification(int id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    MockData.notifications.removeWhere((n) => n.id == id);
+    try {
+      await _apiClient.delete('/notifications/$id');
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> deleteAllNotifications() async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    MockData.notifications.clear();
+    try {
+      await _apiClient.delete('/notifications');
+    } catch (e) {
+      rethrow;
+    }
   }
 }

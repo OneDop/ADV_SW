@@ -8,15 +8,13 @@ import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.dark,
-  ));
-  runApp(
-    const ProviderScope(
-      child: AdvSwApp(),
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
     ),
   );
+  runApp(const ProviderScope(child: AdvSwApp()));
 }
 
 class AdvSwApp extends ConsumerWidget {
@@ -25,7 +23,7 @@ class AdvSwApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeProvider);
-    
+
     return MaterialApp.router(
       title: 'ProjectPal',
       debugShowCheckedModeBanner: false,
@@ -38,10 +36,7 @@ class AdvSwApp extends ConsumerWidget {
       ),
       routerConfig: router,
       builder: (context, child) {
-        return SafeArea(
-          top: false,
-          child: child!,
-        );
+        return SafeArea(top: false, child: child!);
       },
     );
   }
